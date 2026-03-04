@@ -13,9 +13,6 @@
     <a href="https://operator.onl"><img src="https://img.shields.io/badge/Website-operator.onl-blue?style=flat&logo=google-chrome&logoColor=white" alt="Website"></a>
     <a href="https://discord.gg/V4sAZ9XWpN"><img src="https://img.shields.io/badge/Discord-Community-4c60eb?style=flat&logo=discord&logoColor=white" alt="Discord"></a>
   </p>
-
-[中文](README.zh.md) | [日本語](README.ja.md) | [Português](README.pt-br.md) | [Tiếng Việt](README.vi.md) | [Français](README.fr.md) | **English**
-
 </div>
 
 ---
@@ -30,8 +27,8 @@ Built from the ground up to support autonomous agents, persistent memory, and mu
 - **Lightning Fast Boot**: Cold starts in under 1 second, even on single-core 0.6GHz processors.
 - **True Portability**: Deploys as a single, self-contained binary across RISC-V, ARM, and x86 architectures.
 - **Continuous Memory**: Structural, persistent long-term memory that carries context seamlessly across sessions and reboots.
-- **Multi-Channel Integration**: Natively supports Telegram, Discord, WhatsApp, LINE, Slack, DingTalk, QQ, and WeCom out of the box.
-- **Universal Model Support**: Drop-in support for OpenAI, Anthropic, Google Gemini, DeepSeek, local Ollama, and dozens of OpenAI-compatible APIs.
+- **Multi-Channel Integration**: Natively supports Slack, Discord, Telegram, and WhatsApp out of the box.
+- **Universal Model Support**: Drop-in support for OpenAI (5.x), Anthropic (Claude 4.x), Google Gemini (3.x Pro), and local Ollama.
 
 ## 🛠️ Typical Workflows
 
@@ -69,26 +66,31 @@ Edit `~/.operator/config.json` to link your preferred LLM and messaging channels
 {
   "model_list": [
     {
-      "model_name": "gpt-4o",
-      "model": "openai/gpt-4o",
+      "model_name": "gpt-5.2",
+      "model": "openai/gpt-5.2",
       "api_key": "sk-your-openai-key"
     },
     {
-      "model_name": "claude-3-5-sonnet",
-      "model": "anthropic/claude-3-5-sonnet-20241022",
+      "model_name": "claude-4-5-sonnet",
+      "model": "anthropic/claude-4-5-sonnet-20260220",
       "api_key": "sk-ant-your-key"
+    },
+    {
+      "model_name": "gemini-3.1-pro",
+      "model": "gemini/gemini-3.1-pro",
+      "api_key": "AIza-your-google-key"
     }
   ],
   "agents": {
     "defaults": {
-      "model": "claude-3-5-sonnet"
+      "model": "claude-4-5-sonnet"
     }
   },
   "channels": {
-    "telegram": {
+    "slack": {
       "enabled": true,
-      "token": "YOUR_TELEGRAM_BOT_TOKEN",
-      "allow_from": ["YOUR_TELEGRAM_USER_ID"]
+      "bot_token": "xoxb-YOUR_SLACK_BOT_TOKEN",
+      "app_token": "xapp-YOUR_SLACK_APP_TOKEN"
     }
   }
 }
@@ -100,7 +102,7 @@ Run the Gateway daemon to bring your agent online and connect it to your configu
 operator gateway
 ```
 
-You can now message your agent directly via Telegram (or your chosen channel) or interact with it via the CLI:
+You can now message your agent directly via Slack (or your chosen channel) or interact with it via the CLI:
 ```bash
 operator agent -m "What is the status of the system?"
 ```
@@ -111,10 +113,9 @@ Operator supports a zero-code model configuration system. Simply prefix the mode
 
 | Provider | Protocol Prefix | Example |
 |---|---|---|
-| **Anthropic** | `anthropic/` | `anthropic/claude-3-5-sonnet-20241022` |
-| **OpenAI** | `openai/` | `openai/gpt-4o` |
-| **Google Gemini** | `gemini/` | `gemini/gemini-1.5-pro` |
-| **DeepSeek** | `deepseek/` | `deepseek/deepseek-chat` |
+| **Anthropic** | `anthropic/` | `anthropic/claude-4-5-sonnet-20260220` |
+| **OpenAI** | `openai/` | `openai/gpt-5.2` |
+| **Google Gemini** | `gemini/` | `gemini/gemini-3.1-pro` |
 | **Groq** | `groq/` | `groq/llama3-8b-8192` |
 | **Ollama (Local)** | `ollama/` | `ollama/llama3` |
 
