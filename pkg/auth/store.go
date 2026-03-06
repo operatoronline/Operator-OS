@@ -4,10 +4,35 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/standardws/operator/pkg/fileutil"
 )
+
+// globalStore is the optional CredentialStore backend. When set, the
+// package-level functions (GetCredential, SetCredential, etc.) delegate to it
+// instead of the legacy JSON file.
+var (
+	globalStore   CredentialStore
+	globalStoreMu sync.RWMutex
+)
+
+// SetGlobalCredentialStore sets the global CredentialStore used by the
+// package-level convenience functions. Pass nil to revert to JSON file mode.
+func SetGlobalCredentialStore(store CredentialStore) {
+	globalStoreMu.Lock()
+	defer globalStoreMu.Unlock()
+	globalStore = store
+}
+
+// GetGlobalCredentialStore returns the current global CredentialStore, or nil
+// if none is set (legacy JSON mode).
+func GetGlobalCredentialStore() CredentialStore {
+	globalStoreMu.RLock()
+	defer globalStoreMu.RUnlock()
+	return globalStore
+}
 
 type AuthCredential struct {
 	AccessToken  string    `json:"access_token"`
@@ -44,6 +69,14 @@ func authFilePath() string {
 }
 
 func LoadStore() (*AuthStore, error) {
+	if s := GetGlobalCredentialStore(); s != nil {
+		creds, err := s.List()
+		if err != nil {
+			return nil, err
+		}
+		return &AuthStore{Credentials: creds}, nil
+	}
+
 	path := authFilePath()
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -75,6 +108,10 @@ func SaveStore(store *AuthStore) error {
 }
 
 func GetCredential(provider string) (*AuthCredential, error) {
+	if s := GetGlobalCredentialStore(); s != nil {
+		return s.Get(provider)
+	}
+
 	store, err := LoadStore()
 	if err != nil {
 		return nil, err
@@ -87,6 +124,10 @@ func GetCredential(provider string) (*AuthCredential, error) {
 }
 
 func SetCredential(provider string, cred *AuthCredential) error {
+	if s := GetGlobalCredentialStore(); s != nil {
+		return s.Set(provider, cred)
+	}
+
 	store, err := LoadStore()
 	if err != nil {
 		return err
@@ -96,6 +137,10 @@ func SetCredential(provider string, cred *AuthCredential) error {
 }
 
 func DeleteCredential(provider string) error {
+	if s := GetGlobalCredentialStore(); s != nil {
+		return s.Delete(provider)
+	}
+
 	store, err := LoadStore()
 	if err != nil {
 		return err
@@ -105,6 +150,10 @@ func DeleteCredential(provider string) error {
 }
 
 func DeleteAllCredentials() error {
+	if s := GetGlobalCredentialStore(); s != nil {
+		return s.DeleteAll()
+	}
+
 	path := authFilePath()
 	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
 		return err
