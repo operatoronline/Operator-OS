@@ -112,5 +112,5 @@ func (t *RepoTool) Execute(ctx context.Context, args map[string]any) *ToolResult
 
 	_ = info
 
-	return SuccessResult(string(result))
+	return NewToolResult(string(result))
 }

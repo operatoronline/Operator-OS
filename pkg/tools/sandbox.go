@@ -111,5 +111,5 @@ func (t *SandboxTool) Execute(ctx context.Context, args map[string]any) *ToolRes
 
 	_ = info
 
-	return SuccessResult(string(result))
+	return NewToolResult(string(result))
 }

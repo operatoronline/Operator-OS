@@ -62,12 +62,12 @@ func (t *ServicesTool) Execute(ctx context.Context, args map[string]any) *ToolRe
 			"available_services": names,
 		}
 		data, _ := json.MarshalIndent(result, "", "  ")
-		return SuccessResult(string(data))
+		return NewToolResult(string(data))
 
 	case "status":
 		all := t.manager.StatusAll()
 		data, _ := json.MarshalIndent(all, "", "  ")
-		return SuccessResult(string(data))
+		return NewToolResult(string(data))
 
 	case "start":
 		svc, ok := args["service"].(string)
@@ -80,7 +80,7 @@ func (t *ServicesTool) Execute(ctx context.Context, args map[string]any) *ToolRe
 			return ErrorResult(fmt.Sprintf("Failed to start %s: %s", svc, err))
 		}
 		data, _ := json.MarshalIndent(info, "", "  ")
-		return SuccessResult(string(data))
+		return NewToolResult(string(data))
 
 	case "stop":
 		svc, ok := args["service"].(string)
@@ -91,7 +91,7 @@ func (t *ServicesTool) Execute(ctx context.Context, args map[string]any) *ToolRe
 		if err := t.manager.Stop(ctx, stype); err != nil {
 			return ErrorResult(fmt.Sprintf("Failed to stop %s: %s", svc, err))
 		}
-		return SuccessResult(fmt.Sprintf("Service %s stopped", svc))
+		return NewToolResult(fmt.Sprintf("Service %s stopped", svc))
 
 	default:
 		return ErrorResult(fmt.Sprintf("Unknown action: %s", action))

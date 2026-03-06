@@ -96,5 +96,5 @@ func (t *BrowserTool) Execute(ctx context.Context, args map[string]any) *ToolRes
 
 	_ = info // used for future metrics
 
-	return SuccessResult(string(result))
+	return NewToolResult(string(result))
 }
