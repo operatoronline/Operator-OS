@@ -1,0 +1,18 @@
+services:
+  operator-os:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    container_name: operator-os
+    restart: unless-stopped
+    ports:
+      - "18790:18790"
+    volumes:
+      - operator-data:/home/operator/.operator
+    env_file:
+      - .env
+    environment:
+      - TZ=UTC
+
+volumes:
+  operator-data:

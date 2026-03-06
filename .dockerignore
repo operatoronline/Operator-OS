@@ -1,6 +1,6 @@
 .git
 .gitignore
-build/
+!build/operator
 .operator/
 config/
 .env

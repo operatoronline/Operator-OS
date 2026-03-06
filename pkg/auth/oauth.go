@@ -44,10 +44,10 @@ func OpenAIOAuthConfig() OAuthProviderConfig {
 // Client credentials are the same ones used by OpenCode/pi-ai for Cloud Code Assist access.
 func GoogleAntigravityOAuthConfig() OAuthProviderConfig {
 	// These are the same client credentials used by the OpenCode antigravity plugin.
-	clientID := decodeBase64(
+	_ = decodeBase64(
 		"REDACTED_CLIENT_ID_BASE64",
 	)
-	clientSecret := decodeBase64("REDACTED_CLIENT_SECRET_BASE64")
+	_ = decodeBase64("REDACTED_CLIENT_SECRET_BASE64")
 	return OAuthProviderConfig{
 		Issuer:       "https://accounts.google.com/o/oauth2/v2",
 		TokenURL:     "https://oauth2.googleapis.com/token",
