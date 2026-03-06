@@ -26,11 +26,15 @@ type State struct {
 }
 
 // Manager manages persistent state with atomic saves.
+// When a StateStore backend is provided (via NewManagerWithStore), all
+// reads/writes are delegated to the store. Otherwise, the original
+// JSON-file backend is used.
 type Manager struct {
 	workspace string
 	state     *State
 	mu        sync.RWMutex
 	stateFile string
+	store     StateStore // optional pluggable backend
 }
 
 // NewManager creates a new state manager for the given workspace.
@@ -72,6 +76,33 @@ func NewManager(workspace string) *Manager {
 	return sm
 }
 
+// NewManagerWithStore creates a state manager that delegates persistence to the
+// given StateStore. The workspace is still used for directory context but no
+// JSON files are read or written.
+func NewManagerWithStore(workspace string, store StateStore) *Manager {
+	sm := &Manager{
+		workspace: workspace,
+		state:     &State{},
+		store:     store,
+	}
+
+	// Load existing state from the store.
+	if ch, err := store.Get("last_channel"); err == nil && ch != "" {
+		sm.state.LastChannel = ch
+	}
+	if id, err := store.Get("last_chat_id"); err == nil && id != "" {
+		sm.state.LastChatID = id
+	}
+	if t, err := store.GetTimestamp("last_channel"); err == nil && !t.IsZero() {
+		sm.state.Timestamp = t
+	}
+	if t, err := store.GetTimestamp("last_chat_id"); err == nil && t.After(sm.state.Timestamp) {
+		sm.state.Timestamp = t
+	}
+
+	return sm
+}
+
 // SetLastChannel atomically updates the last channel and saves the state.
 // This method uses a temp file + rename pattern for atomic writes,
 // ensuring that the state file is never corrupted even if the process crashes.
@@ -79,11 +110,16 @@ func (sm *Manager) SetLastChannel(channel string) error {
 	sm.mu.Lock()
 	defer sm.mu.Unlock()
 
-	// Update state
 	sm.state.LastChannel = channel
 	sm.state.Timestamp = time.Now()
 
-	// Atomic save using temp file + rename
+	if sm.store != nil {
+		if err := sm.store.Set("last_channel", channel); err != nil {
+			return fmt.Errorf("failed to save state to store: %w", err)
+		}
+		return nil
+	}
+
 	if err := sm.saveAtomic(); err != nil {
 		return fmt.Errorf("failed to save state atomically: %w", err)
 	}
@@ -96,11 +132,16 @@ func (sm *Manager) SetLastChatID(chatID string) error {
 	sm.mu.Lock()
 	defer sm.mu.Unlock()
 
-	// Update state
 	sm.state.LastChatID = chatID
 	sm.state.Timestamp = time.Now()
 
-	// Atomic save using temp file + rename
+	if sm.store != nil {
+		if err := sm.store.Set("last_chat_id", chatID); err != nil {
+			return fmt.Errorf("failed to save state to store: %w", err)
+		}
+		return nil
+	}
+
 	if err := sm.saveAtomic(); err != nil {
 		return fmt.Errorf("failed to save state atomically: %w", err)
 	}
