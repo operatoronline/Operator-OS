@@ -10,7 +10,7 @@
 
 | # | Phase | Status | Target | Progress |
 |---|---|---|---|---|
-| 1 | Foundation (SQLite, logging, metrics, encryption) | 🟡 In Progress | Weeks 1–4 | 75% |
+| 1 | Foundation (SQLite, logging, metrics, encryption) | 🟡 In Progress | Weeks 1–4 | 88% |
 | 2 | User Management (accounts, tenancy, auth) | ⬜ Not Started | Weeks 5–8 | 0% |
 | 3 | Billing & Plans (Stripe, metering) | ⬜ Not Started | Weeks 9–12 | 0% |
 | 4 | Service Integrations (OAuth, vault, marketplace) | ⬜ Not Started | Weeks 13–16 | 0% |
@@ -31,7 +31,7 @@
 | F4 | Add structured logging (zerolog) | P0 | ✅ Done | Cosmo | Replaced `pkg/logger` internals with `rs/zerolog`. All 20 existing API functions preserved (Debug/Info/Warn/Error/Fatal × plain/C/F/CF). Added 12 context-aware functions (`*Ctx`) with correlation ID propagation via `WithCorrelationID(ctx, id)`. JSON output via `OPERATOR_LOG_FORMAT=json`, console (default). Level via `OPERATOR_LOG_LEVEL` env var. File logging via multi-writer. 10 new test cases (correlation ID, structured JSON, context functions, env config, file logging). |
 | F5 | Add OpenTelemetry metrics | P1 | ✅ Done | Cosmo | Prometheus endpoint at `/metrics` via `prometheus/client_golang`. New `pkg/metrics` package with 11 collectors: LLM request duration/tokens/errors, sessions active/messages, bus messages/queue depth, tool execution duration/count, uptime, info. Convenience helpers (`RecordLLMRequest`, `RecordToolExecution`, `RecordBusMessage`). Instrumented `tools.ToolRegistry.ExecuteWithContext` and `bus.MessageBus.Publish*`. Registered on health server mux. `metrics.Init()` called at gateway startup. 11 tests pass. |
 | F6 | Add session TTL and eviction | P1 | ✅ Done | Cosmo | `EvictableStore` interface extends `SessionStore` with `SessionCount`, `DeleteSession`, `EvictExpired`, `EvictLRU`. `SQLiteStore` implements all four. `Evictor` runs periodic background sweeps (TTL then LRU). `DefaultEvictorConfig()`: 24h TTL, 10K max sessions, 5min interval. 14 new tests pass. |
-| F7 | Add automated SQLite backup | P1 | ⬜ TODO | — | Configurable backup schedule via cron tool. SQLite `.backup` API. Local + optional cloud (S3-compatible). |
+| F7 | Add automated SQLite backup | P1 | ✅ Done | Cosmo | New `pkg/backup` package. `VacuumInto()` for atomic snapshots. `Scheduler` with configurable interval, retention (MaxBackups), and auto-pruning. `ListBackups()` utility. 14 tests pass. |
 | F8 | Database migration framework | P1 | ⬜ TODO | — | Embedded SQL migrations with version tracking. Auto-run on startup. |
 
 ### Definition of Done — Phase 1
@@ -41,7 +41,7 @@
 - [x] Structured JSON logging with correlation IDs
 - [x] Prometheus metrics endpoint functional
 - [x] Session eviction prevents unbounded memory growth
-- [ ] Automated backup runs on schedule
+- [x] Automated backup runs on schedule
 - [ ] All existing tests pass
 - [ ] New tests cover SQLite stores (≥80% coverage for new code)
 - [ ] `make test` passes clean
@@ -131,6 +131,7 @@
 
 | Date | Change |
 |---|---|
+| 2026-03-06 | F7 complete: Automated SQLite backup. New `pkg/backup` package with `VacuumInto()` for atomic snapshots using SQLite's VACUUM INTO. `Scheduler` struct runs periodic backups with configurable interval (default 6h), retention limit (default 7), and automatic pruning of oldest backups. `ListBackups()` lists existing backups sorted chronologically. `Config` struct with `DefaultConfig()`. 14 new tests covering: VacuumInto success/failure, scheduler validation, directory creation, RunOnce, Start/Stop lifecycle, prune logic (over/under limit, non-DB file filtering), list sorting, multiple backups with pruning, backup content verification. |
 | 2026-03-06 | F6 complete: Session TTL and eviction. New `EvictableStore` interface with `SessionCount`, `DeleteSession`, `EvictExpired(ttl)`, `EvictLRU(maxSessions)`. SQLiteStore implements all methods (CASCADE deletes for messages). `Evictor` struct runs background goroutine with configurable interval; `RunOnce()` for manual sweeps. `DefaultEvictorConfig()`: 24h TTL, 10K max sessions, 5min sweep. 14 new tests covering: count, delete, TTL eviction, LRU eviction, combined TTL+LRU, no-op cases, start/stop lifecycle, default config. |
 | 2026-03-06 | F5 complete: Prometheus metrics endpoint. New `pkg/metrics` package with `prometheus/client_golang`. 11 collectors: LLM (request_duration_seconds histogram, tokens_total counter, errors_total counter), Sessions (active gauge, messages_total counter), Bus (messages_total counter, queue_depth gauge), Tools (execution_duration_seconds histogram, executions_total counter), System (uptime_seconds gauge, info gauge). Instrumented ToolRegistry.ExecuteWithContext and MessageBus.Publish*. Registered `/metrics` on health server. 11 new tests. |
 | 2026-03-06 | F4 complete: Structured logging with zerolog. Replaced pkg/logger internals with rs/zerolog while preserving all 20 existing API functions. Added 12 context-aware Ctx functions with correlation ID propagation. JSON/console output modes via OPERATOR_LOG_FORMAT env. Log level via OPERATOR_LOG_LEVEL env. Multi-writer file logging. 10 new tests. |
