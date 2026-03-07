@@ -273,7 +273,7 @@ func TestAutoMigrate_WithEmbeddedMigrations(t *testing.T) {
 
 	n, err := AutoMigrate(db)
 	require.NoError(t, err)
-	assert.Equal(t, 5, n) // 001, 002, 003, 004, 005
+	assert.Equal(t, 6, n) // 001, 002, 003, 004, 005, 006
 
 	// Verify all tables created.
 	_, err = db.Exec(`INSERT INTO sessions (key) VALUES ('test')`)

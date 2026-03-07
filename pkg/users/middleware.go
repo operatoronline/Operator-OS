@@ -15,6 +15,11 @@ const (
 	contextKeyClaims contextKey = "claims"
 )
 
+// ContextKeyUserID returns the context key used for the authenticated user ID.
+// This is exported for use by other packages that need to inject user context
+// (e.g., in tests or inter-package middleware).
+func ContextKeyUserID() contextKey { return contextKeyUserID }
+
 // AuthMiddleware returns an HTTP middleware that validates JWT access tokens.
 // Protected routes receive user info via request context.
 func AuthMiddleware(ts *TokenService) func(http.Handler) http.Handler {
