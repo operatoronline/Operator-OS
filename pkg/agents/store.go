@@ -9,24 +9,37 @@ import (
 	"time"
 )
 
+// AgentIntegrationScope defines which parts of an integration an agent
+// is allowed to access. An empty AllowedTools slice means "all tools"
+// for that integration.
+type AgentIntegrationScope struct {
+	// IntegrationID is the integration manifest ID (e.g. "google-gmail").
+	IntegrationID string `json:"integration_id"`
+	// AllowedTools restricts the agent to specific tool names. Empty means all tools.
+	AllowedTools []string `json:"allowed_tools,omitempty"`
+	// AllowedScopes restricts the OAuth scopes the agent can use. Empty means all scopes.
+	AllowedScopes []string `json:"allowed_scopes,omitempty"`
+}
+
 // UserAgent represents a user-defined agent configuration.
 type UserAgent struct {
-	ID             string   `json:"id"`
-	UserID         string   `json:"user_id"`
-	Name           string   `json:"name"`
-	Description    string   `json:"description,omitempty"`
-	SystemPrompt   string   `json:"system_prompt,omitempty"`
-	Model          string   `json:"model,omitempty"`
-	ModelFallbacks []string `json:"model_fallbacks,omitempty"`
-	Tools          []string `json:"tools,omitempty"`
-	Skills         []string `json:"skills,omitempty"`
-	MaxTokens      int      `json:"max_tokens,omitempty"`
-	Temperature    *float64 `json:"temperature,omitempty"`
-	MaxIterations  int      `json:"max_iterations,omitempty"`
-	IsDefault      bool     `json:"is_default"`
-	Status         string   `json:"status"`
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
+	ID                   string                  `json:"id"`
+	UserID               string                  `json:"user_id"`
+	Name                 string                  `json:"name"`
+	Description          string                  `json:"description,omitempty"`
+	SystemPrompt         string                  `json:"system_prompt,omitempty"`
+	Model                string                  `json:"model,omitempty"`
+	ModelFallbacks       []string                `json:"model_fallbacks,omitempty"`
+	Tools                []string                `json:"tools,omitempty"`
+	Skills               []string                `json:"skills,omitempty"`
+	MaxTokens            int                     `json:"max_tokens,omitempty"`
+	Temperature          *float64                `json:"temperature,omitempty"`
+	MaxIterations        int                     `json:"max_iterations,omitempty"`
+	IsDefault            bool                    `json:"is_default"`
+	Status               string                  `json:"status"`
+	AllowedIntegrations  []AgentIntegrationScope `json:"allowed_integrations,omitempty"`
+	CreatedAt            time.Time               `json:"created_at"`
+	UpdatedAt            time.Time               `json:"updated_at"`
 }
 
 // Agent status constants.

@@ -3,6 +3,7 @@ package agents
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -36,52 +37,55 @@ func (a *API) RegisterRoutes(mux *http.ServeMux, authMiddleware func(http.Handle
 
 // CreateAgentRequest is the JSON body for creating an agent.
 type CreateAgentRequest struct {
-	Name           string   `json:"name"`
-	Description    string   `json:"description,omitempty"`
-	SystemPrompt   string   `json:"system_prompt,omitempty"`
-	Model          string   `json:"model,omitempty"`
-	ModelFallbacks []string `json:"model_fallbacks,omitempty"`
-	Tools          []string `json:"tools,omitempty"`
-	Skills         []string `json:"skills,omitempty"`
-	MaxTokens      int      `json:"max_tokens,omitempty"`
-	Temperature    *float64 `json:"temperature,omitempty"`
-	MaxIterations  int      `json:"max_iterations,omitempty"`
-	IsDefault      bool     `json:"is_default,omitempty"`
+	Name                string                  `json:"name"`
+	Description         string                  `json:"description,omitempty"`
+	SystemPrompt        string                  `json:"system_prompt,omitempty"`
+	Model               string                  `json:"model,omitempty"`
+	ModelFallbacks      []string                `json:"model_fallbacks,omitempty"`
+	Tools               []string                `json:"tools,omitempty"`
+	Skills              []string                `json:"skills,omitempty"`
+	MaxTokens           int                     `json:"max_tokens,omitempty"`
+	Temperature         *float64                `json:"temperature,omitempty"`
+	MaxIterations       int                     `json:"max_iterations,omitempty"`
+	IsDefault           bool                    `json:"is_default,omitempty"`
+	AllowedIntegrations []AgentIntegrationScope  `json:"allowed_integrations,omitempty"`
 }
 
 // UpdateAgentRequest is the JSON body for updating an agent.
 type UpdateAgentRequest struct {
-	Name           *string  `json:"name,omitempty"`
-	Description    *string  `json:"description,omitempty"`
-	SystemPrompt   *string  `json:"system_prompt,omitempty"`
-	Model          *string  `json:"model,omitempty"`
-	ModelFallbacks []string `json:"model_fallbacks,omitempty"`
-	Tools          []string `json:"tools,omitempty"`
-	Skills         []string `json:"skills,omitempty"`
-	MaxTokens      *int     `json:"max_tokens,omitempty"`
-	Temperature    *float64 `json:"temperature,omitempty"`
-	MaxIterations  *int     `json:"max_iterations,omitempty"`
-	IsDefault      *bool    `json:"is_default,omitempty"`
-	Status         *string  `json:"status,omitempty"`
+	Name                *string                  `json:"name,omitempty"`
+	Description         *string                  `json:"description,omitempty"`
+	SystemPrompt        *string                  `json:"system_prompt,omitempty"`
+	Model               *string                  `json:"model,omitempty"`
+	ModelFallbacks      []string                 `json:"model_fallbacks,omitempty"`
+	Tools               []string                 `json:"tools,omitempty"`
+	Skills              []string                 `json:"skills,omitempty"`
+	MaxTokens           *int                     `json:"max_tokens,omitempty"`
+	Temperature         *float64                 `json:"temperature,omitempty"`
+	MaxIterations       *int                     `json:"max_iterations,omitempty"`
+	IsDefault           *bool                    `json:"is_default,omitempty"`
+	Status              *string                  `json:"status,omitempty"`
+	AllowedIntegrations *[]AgentIntegrationScope `json:"allowed_integrations,omitempty"`
 }
 
 // AgentResponse is the JSON response for agent operations.
 type AgentResponse struct {
-	ID             string   `json:"id"`
-	Name           string   `json:"name"`
-	Description    string   `json:"description,omitempty"`
-	SystemPrompt   string   `json:"system_prompt,omitempty"`
-	Model          string   `json:"model,omitempty"`
-	ModelFallbacks []string `json:"model_fallbacks,omitempty"`
-	Tools          []string `json:"tools,omitempty"`
-	Skills         []string `json:"skills,omitempty"`
-	MaxTokens      int      `json:"max_tokens,omitempty"`
-	Temperature    *float64 `json:"temperature,omitempty"`
-	MaxIterations  int      `json:"max_iterations,omitempty"`
-	IsDefault      bool     `json:"is_default"`
-	Status         string   `json:"status"`
-	CreatedAt      string   `json:"created_at"`
-	UpdatedAt      string   `json:"updated_at"`
+	ID                  string                  `json:"id"`
+	Name                string                  `json:"name"`
+	Description         string                  `json:"description,omitempty"`
+	SystemPrompt        string                  `json:"system_prompt,omitempty"`
+	Model               string                  `json:"model,omitempty"`
+	ModelFallbacks      []string                `json:"model_fallbacks,omitempty"`
+	Tools               []string                `json:"tools,omitempty"`
+	Skills              []string                `json:"skills,omitempty"`
+	MaxTokens           int                     `json:"max_tokens,omitempty"`
+	Temperature         *float64                `json:"temperature,omitempty"`
+	MaxIterations       int                     `json:"max_iterations,omitempty"`
+	IsDefault           bool                    `json:"is_default"`
+	Status              string                  `json:"status"`
+	AllowedIntegrations []AgentIntegrationScope  `json:"allowed_integrations,omitempty"`
+	CreatedAt           string                  `json:"created_at"`
+	UpdatedAt           string                  `json:"updated_at"`
 }
 
 // AgentListResponse wraps a list of agents.
@@ -159,19 +163,29 @@ func (a *API) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate allowed integrations.
+	for i, scope := range req.AllowedIntegrations {
+		if scope.IntegrationID == "" {
+			writeError(w, http.StatusBadRequest, "invalid_integration_scope",
+				fmt.Sprintf("allowed_integrations[%d]: integration_id is required", i))
+			return
+		}
+	}
+
 	agent := &UserAgent{
-		UserID:         userID,
-		Name:           req.Name,
-		Description:    strings.TrimSpace(req.Description),
-		SystemPrompt:   req.SystemPrompt,
-		Model:          strings.TrimSpace(req.Model),
-		ModelFallbacks: req.ModelFallbacks,
-		Tools:          req.Tools,
-		Skills:         req.Skills,
-		MaxTokens:      req.MaxTokens,
-		Temperature:    req.Temperature,
-		MaxIterations:  req.MaxIterations,
-		IsDefault:      req.IsDefault,
+		UserID:              userID,
+		Name:                req.Name,
+		Description:         strings.TrimSpace(req.Description),
+		SystemPrompt:        req.SystemPrompt,
+		Model:               strings.TrimSpace(req.Model),
+		ModelFallbacks:      req.ModelFallbacks,
+		Tools:               req.Tools,
+		Skills:              req.Skills,
+		MaxTokens:           req.MaxTokens,
+		Temperature:         req.Temperature,
+		MaxIterations:       req.MaxIterations,
+		IsDefault:           req.IsDefault,
+		AllowedIntegrations: req.AllowedIntegrations,
 	}
 
 	if err := a.store.Create(agent); err != nil {
@@ -297,6 +311,17 @@ func (a *API) handleUpdate(w http.ResponseWriter, r *http.Request) {
 		}
 		agent.Status = status
 	}
+	if req.AllowedIntegrations != nil {
+		scopes := *req.AllowedIntegrations
+		for i, scope := range scopes {
+			if scope.IntegrationID == "" {
+				writeError(w, http.StatusBadRequest, "invalid_integration_scope",
+					fmt.Sprintf("allowed_integrations[%d]: integration_id is required", i))
+				return
+			}
+		}
+		agent.AllowedIntegrations = scopes
+	}
 
 	if err := a.store.Update(agent); err != nil {
 		if errors.Is(err, ErrNameExists) {
@@ -370,21 +395,22 @@ func (a *API) handleSetDefault(w http.ResponseWriter, r *http.Request) {
 
 func agentToResponse(a *UserAgent) *AgentResponse {
 	return &AgentResponse{
-		ID:             a.ID,
-		Name:           a.Name,
-		Description:    a.Description,
-		SystemPrompt:   a.SystemPrompt,
-		Model:          a.Model,
-		ModelFallbacks: a.ModelFallbacks,
-		Tools:          a.Tools,
-		Skills:         a.Skills,
-		MaxTokens:      a.MaxTokens,
-		Temperature:    a.Temperature,
-		MaxIterations:  a.MaxIterations,
-		IsDefault:      a.IsDefault,
-		Status:         a.Status,
-		CreatedAt:      a.CreatedAt.Format("2006-01-02T15:04:05Z"),
-		UpdatedAt:      a.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+		ID:                  a.ID,
+		Name:                a.Name,
+		Description:         a.Description,
+		SystemPrompt:        a.SystemPrompt,
+		Model:               a.Model,
+		ModelFallbacks:      a.ModelFallbacks,
+		Tools:               a.Tools,
+		Skills:              a.Skills,
+		MaxTokens:           a.MaxTokens,
+		Temperature:         a.Temperature,
+		MaxIterations:       a.MaxIterations,
+		IsDefault:           a.IsDefault,
+		Status:              a.Status,
+		AllowedIntegrations: a.AllowedIntegrations,
+		CreatedAt:           a.CreatedAt.Format("2006-01-02T15:04:05Z"),
+		UpdatedAt:           a.UpdatedAt.Format("2006-01-02T15:04:05Z"),
 	}
 }
 

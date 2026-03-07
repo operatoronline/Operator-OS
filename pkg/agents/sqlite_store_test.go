@@ -350,3 +350,191 @@ func TestUnmarshalStringSlice(t *testing.T) {
 		})
 	}
 }
+
+func TestAllowedIntegrations_CreateAndGet(t *testing.T) {
+	store := tempStore(t)
+
+	agent := &UserAgent{
+		UserID: "user-1",
+		Name:   "Scoped Agent",
+		AllowedIntegrations: []AgentIntegrationScope{
+			{
+				IntegrationID: "google-gmail",
+				AllowedTools:  []string{"gmail_list_messages", "gmail_get_message"},
+				AllowedScopes: []string{"gmail.readonly"},
+			},
+			{
+				IntegrationID: "shopify-products",
+			},
+		},
+	}
+	require.NoError(t, store.Create(agent))
+
+	got, err := store.GetByID(agent.ID)
+	require.NoError(t, err)
+	require.Len(t, got.AllowedIntegrations, 2)
+	assert.Equal(t, "google-gmail", got.AllowedIntegrations[0].IntegrationID)
+	assert.Equal(t, []string{"gmail_list_messages", "gmail_get_message"}, got.AllowedIntegrations[0].AllowedTools)
+	assert.Equal(t, []string{"gmail.readonly"}, got.AllowedIntegrations[0].AllowedScopes)
+	assert.Equal(t, "shopify-products", got.AllowedIntegrations[1].IntegrationID)
+	assert.Nil(t, got.AllowedIntegrations[1].AllowedTools)
+	assert.Nil(t, got.AllowedIntegrations[1].AllowedScopes)
+}
+
+func TestAllowedIntegrations_EmptySlice(t *testing.T) {
+	store := tempStore(t)
+
+	agent := &UserAgent{
+		UserID: "user-1",
+		Name:   "Open Agent",
+		// No AllowedIntegrations = open access
+	}
+	require.NoError(t, store.Create(agent))
+
+	got, err := store.GetByID(agent.ID)
+	require.NoError(t, err)
+	assert.Nil(t, got.AllowedIntegrations)
+}
+
+func TestAllowedIntegrations_Update(t *testing.T) {
+	store := tempStore(t)
+
+	agent := &UserAgent{
+		UserID: "user-1",
+		Name:   "Agent To Scope",
+	}
+	require.NoError(t, store.Create(agent))
+
+	// Update to add scopes.
+	agent.AllowedIntegrations = []AgentIntegrationScope{
+		{IntegrationID: "google-drive", AllowedTools: []string{"drive_list_files"}},
+	}
+	require.NoError(t, store.Update(agent))
+
+	got, err := store.GetByID(agent.ID)
+	require.NoError(t, err)
+	require.Len(t, got.AllowedIntegrations, 1)
+	assert.Equal(t, "google-drive", got.AllowedIntegrations[0].IntegrationID)
+	assert.Equal(t, []string{"drive_list_files"}, got.AllowedIntegrations[0].AllowedTools)
+
+	// Update to clear scopes (back to open access).
+	agent.AllowedIntegrations = nil
+	require.NoError(t, store.Update(agent))
+
+	got, err = store.GetByID(agent.ID)
+	require.NoError(t, err)
+	assert.Nil(t, got.AllowedIntegrations)
+}
+
+func TestAllowedIntegrations_ListByUser(t *testing.T) {
+	store := tempStore(t)
+
+	agent1 := &UserAgent{
+		UserID: "user-1",
+		Name:   "Agent 1",
+		AllowedIntegrations: []AgentIntegrationScope{
+			{IntegrationID: "google-gmail"},
+		},
+	}
+	agent2 := &UserAgent{
+		UserID: "user-1",
+		Name:   "Agent 2",
+		// Open access
+	}
+	require.NoError(t, store.Create(agent1))
+	require.NoError(t, store.Create(agent2))
+
+	agents, err := store.ListByUser("user-1")
+	require.NoError(t, err)
+	require.Len(t, agents, 2)
+	assert.Len(t, agents[0].AllowedIntegrations, 1)
+	assert.Nil(t, agents[1].AllowedIntegrations)
+}
+
+func TestAllowedIntegrations_GetDefault(t *testing.T) {
+	store := tempStore(t)
+
+	agent := &UserAgent{
+		UserID:    "user-1",
+		Name:      "Default Scoped",
+		IsDefault: true,
+		AllowedIntegrations: []AgentIntegrationScope{
+			{IntegrationID: "shopify-orders", AllowedTools: []string{"shopify_list_orders"}},
+		},
+	}
+	require.NoError(t, store.Create(agent))
+
+	got, err := store.GetDefault("user-1")
+	require.NoError(t, err)
+	require.Len(t, got.AllowedIntegrations, 1)
+	assert.Equal(t, "shopify-orders", got.AllowedIntegrations[0].IntegrationID)
+}
+
+func TestAllowedIntegrations_Persistence(t *testing.T) {
+	dbPath := filepath.Join(t.TempDir(), "persist.db")
+	store1, err := NewSQLiteUserAgentStore(dbPath)
+	require.NoError(t, err)
+
+	agent := &UserAgent{
+		UserID: "user-1",
+		Name:   "Persist Test",
+		AllowedIntegrations: []AgentIntegrationScope{
+			{IntegrationID: "google-calendar", AllowedScopes: []string{"calendar.readonly"}},
+		},
+	}
+	require.NoError(t, store1.Create(agent))
+	store1.Close()
+
+	store2, err := NewSQLiteUserAgentStore(dbPath)
+	require.NoError(t, err)
+	defer store2.Close()
+
+	got, err := store2.GetByID(agent.ID)
+	require.NoError(t, err)
+	require.Len(t, got.AllowedIntegrations, 1)
+	assert.Equal(t, "google-calendar", got.AllowedIntegrations[0].IntegrationID)
+	assert.Equal(t, []string{"calendar.readonly"}, got.AllowedIntegrations[0].AllowedScopes)
+}
+
+func TestMarshalUnmarshalIntegrationScopes(t *testing.T) {
+	tests := []struct {
+		name  string
+		input []AgentIntegrationScope
+		want  string
+	}{
+		{"nil", nil, "[]"},
+		{"empty", []AgentIntegrationScope{}, "[]"},
+		{"one", []AgentIntegrationScope{
+			{IntegrationID: "test"},
+		}, `[{"integration_id":"test"}]`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := marshalIntegrationScopes(tt.input)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestUnmarshalIntegrationScopes(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+		want  []AgentIntegrationScope
+	}{
+		{"empty string", "", nil},
+		{"empty array", "[]", nil},
+		{"null", "null", nil},
+		{"invalid", "not-json", nil},
+		{"valid", `[{"integration_id":"test","allowed_tools":["a"]}]`,
+			[]AgentIntegrationScope{{IntegrationID: "test", AllowedTools: []string{"a"}}}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := unmarshalIntegrationScopes(tt.input)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}

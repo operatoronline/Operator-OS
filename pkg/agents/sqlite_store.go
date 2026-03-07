@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS user_agents (
     max_iterations  INTEGER NOT NULL DEFAULT 0,
     is_default      INTEGER NOT NULL DEFAULT 0,
     status          TEXT NOT NULL DEFAULT 'active',
+    allowed_integrations TEXT NOT NULL DEFAULT '[]',
     created_at      TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
     updated_at      TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 );
@@ -95,6 +96,7 @@ func (s *SQLiteUserAgentStore) Create(agent *UserAgent) error {
 	fallbacksJSON := marshalStringSlice(agent.ModelFallbacks)
 	toolsJSON := marshalStringSlice(agent.Tools)
 	skillsJSON := marshalStringSlice(agent.Skills)
+	integrationsJSON := marshalIntegrationScopes(agent.AllowedIntegrations)
 
 	var tempVal sql.NullFloat64
 	if agent.Temperature != nil {
@@ -104,8 +106,8 @@ func (s *SQLiteUserAgentStore) Create(agent *UserAgent) error {
 	_, err := s.db.Exec(
 		`INSERT INTO user_agents (id, user_id, name, description, system_prompt, model,
 		 model_fallbacks, tools, skills, max_tokens, temperature, max_iterations,
-		 is_default, status, created_at, updated_at)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		 is_default, status, allowed_integrations, created_at, updated_at)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		agent.ID,
 		agent.UserID,
 		agent.Name,
@@ -120,6 +122,7 @@ func (s *SQLiteUserAgentStore) Create(agent *UserAgent) error {
 		agent.MaxIterations,
 		isDefault,
 		agent.Status,
+		integrationsJSON,
 		now.Format(time.RFC3339Nano),
 		now.Format(time.RFC3339Nano),
 	)
@@ -144,13 +147,14 @@ func (s *SQLiteUserAgentStore) getBy(column, value string) (*UserAgent, error) {
 	query := fmt.Sprintf(
 		`SELECT id, user_id, name, description, system_prompt, model,
 		 model_fallbacks, tools, skills, max_tokens, temperature, max_iterations,
-		 is_default, status, created_at, updated_at
+		 is_default, status, allowed_integrations, created_at, updated_at
 		 FROM user_agents WHERE %s = ?`, column,
 	)
 
 	var a UserAgent
 	var isDefault int
 	var fallbacksJSON, toolsJSON, skillsJSON string
+	var integrationsJSON sql.NullString
 	var tempVal sql.NullFloat64
 	var createdStr, updatedStr string
 
@@ -158,7 +162,7 @@ func (s *SQLiteUserAgentStore) getBy(column, value string) (*UserAgent, error) {
 		&a.ID, &a.UserID, &a.Name, &a.Description, &a.SystemPrompt, &a.Model,
 		&fallbacksJSON, &toolsJSON, &skillsJSON,
 		&a.MaxTokens, &tempVal, &a.MaxIterations,
-		&isDefault, &a.Status, &createdStr, &updatedStr,
+		&isDefault, &a.Status, &integrationsJSON, &createdStr, &updatedStr,
 	)
 	if err == sql.ErrNoRows {
 		return nil, ErrAgentNotFound
@@ -171,6 +175,9 @@ func (s *SQLiteUserAgentStore) getBy(column, value string) (*UserAgent, error) {
 	a.ModelFallbacks = unmarshalStringSlice(fallbacksJSON)
 	a.Tools = unmarshalStringSlice(toolsJSON)
 	a.Skills = unmarshalStringSlice(skillsJSON)
+	if integrationsJSON.Valid {
+		a.AllowedIntegrations = unmarshalIntegrationScopes(integrationsJSON.String)
+	}
 	if tempVal.Valid {
 		a.Temperature = &tempVal.Float64
 	}
@@ -195,6 +202,7 @@ func (s *SQLiteUserAgentStore) Update(agent *UserAgent) error {
 	fallbacksJSON := marshalStringSlice(agent.ModelFallbacks)
 	toolsJSON := marshalStringSlice(agent.Tools)
 	skillsJSON := marshalStringSlice(agent.Skills)
+	integrationsJSON := marshalIntegrationScopes(agent.AllowedIntegrations)
 
 	var tempVal sql.NullFloat64
 	if agent.Temperature != nil {
@@ -204,7 +212,7 @@ func (s *SQLiteUserAgentStore) Update(agent *UserAgent) error {
 	res, err := s.db.Exec(
 		`UPDATE user_agents SET name = ?, description = ?, system_prompt = ?, model = ?,
 		 model_fallbacks = ?, tools = ?, skills = ?, max_tokens = ?, temperature = ?,
-		 max_iterations = ?, is_default = ?, status = ?, updated_at = ?
+		 max_iterations = ?, is_default = ?, status = ?, allowed_integrations = ?, updated_at = ?
 		 WHERE id = ?`,
 		agent.Name,
 		agent.Description,
@@ -218,6 +226,7 @@ func (s *SQLiteUserAgentStore) Update(agent *UserAgent) error {
 		agent.MaxIterations,
 		isDefault,
 		agent.Status,
+		integrationsJSON,
 		agent.UpdatedAt.Format(time.RFC3339Nano),
 		agent.ID,
 	)
@@ -256,7 +265,7 @@ func (s *SQLiteUserAgentStore) ListByUser(userID string) ([]*UserAgent, error) {
 	rows, err := s.db.Query(
 		`SELECT id, user_id, name, description, system_prompt, model,
 		 model_fallbacks, tools, skills, max_tokens, temperature, max_iterations,
-		 is_default, status, created_at, updated_at
+		 is_default, status, allowed_integrations, created_at, updated_at
 		 FROM user_agents WHERE user_id = ? ORDER BY created_at ASC`, userID,
 	)
 	if err != nil {
@@ -306,16 +315,17 @@ func (s *SQLiteUserAgentStore) GetDefault(userID string) (*UserAgent, error) {
 	var tempVal sql.NullFloat64
 	var createdStr, updatedStr string
 
+	var integrationsJSON sql.NullString
 	err := s.db.QueryRow(
 		`SELECT id, user_id, name, description, system_prompt, model,
 		 model_fallbacks, tools, skills, max_tokens, temperature, max_iterations,
-		 is_default, status, created_at, updated_at
+		 is_default, status, allowed_integrations, created_at, updated_at
 		 FROM user_agents WHERE user_id = ? AND is_default = 1`, userID,
 	).Scan(
 		&a.ID, &a.UserID, &a.Name, &a.Description, &a.SystemPrompt, &a.Model,
 		&fallbacksJSON, &toolsJSON, &skillsJSON,
 		&a.MaxTokens, &tempVal, &a.MaxIterations,
-		&isDefault, &a.Status, &createdStr, &updatedStr,
+		&isDefault, &a.Status, &integrationsJSON, &createdStr, &updatedStr,
 	)
 	if err == sql.ErrNoRows {
 		return nil, ErrAgentNotFound
@@ -328,6 +338,9 @@ func (s *SQLiteUserAgentStore) GetDefault(userID string) (*UserAgent, error) {
 	a.ModelFallbacks = unmarshalStringSlice(fallbacksJSON)
 	a.Tools = unmarshalStringSlice(toolsJSON)
 	a.Skills = unmarshalStringSlice(skillsJSON)
+	if integrationsJSON.Valid {
+		a.AllowedIntegrations = unmarshalIntegrationScopes(integrationsJSON.String)
+	}
 	if tempVal.Valid {
 		a.Temperature = &tempVal.Float64
 	}
@@ -385,6 +398,7 @@ func scanAgent(rows *sql.Rows) (*UserAgent, error) {
 	var a UserAgent
 	var isDefault int
 	var fallbacksJSON, toolsJSON, skillsJSON string
+	var integrationsJSON sql.NullString
 	var tempVal sql.NullFloat64
 	var createdStr, updatedStr string
 
@@ -392,7 +406,7 @@ func scanAgent(rows *sql.Rows) (*UserAgent, error) {
 		&a.ID, &a.UserID, &a.Name, &a.Description, &a.SystemPrompt, &a.Model,
 		&fallbacksJSON, &toolsJSON, &skillsJSON,
 		&a.MaxTokens, &tempVal, &a.MaxIterations,
-		&isDefault, &a.Status, &createdStr, &updatedStr,
+		&isDefault, &a.Status, &integrationsJSON, &createdStr, &updatedStr,
 	); err != nil {
 		return nil, fmt.Errorf("scan agent: %w", err)
 	}
@@ -401,6 +415,9 @@ func scanAgent(rows *sql.Rows) (*UserAgent, error) {
 	a.ModelFallbacks = unmarshalStringSlice(fallbacksJSON)
 	a.Tools = unmarshalStringSlice(toolsJSON)
 	a.Skills = unmarshalStringSlice(skillsJSON)
+	if integrationsJSON.Valid {
+		a.AllowedIntegrations = unmarshalIntegrationScopes(integrationsJSON.String)
+	}
 	if tempVal.Valid {
 		a.Temperature = &tempVal.Float64
 	}
@@ -408,6 +425,30 @@ func scanAgent(rows *sql.Rows) (*UserAgent, error) {
 	a.UpdatedAt, _ = time.Parse(time.RFC3339Nano, updatedStr)
 
 	return &a, nil
+}
+
+// marshalIntegrationScopes encodes integration scopes to JSON. Returns "[]" for nil/empty.
+func marshalIntegrationScopes(scopes []AgentIntegrationScope) string {
+	if len(scopes) == 0 {
+		return "[]"
+	}
+	b, _ := json.Marshal(scopes)
+	return string(b)
+}
+
+// unmarshalIntegrationScopes decodes integration scopes from JSON. Returns nil for empty/invalid.
+func unmarshalIntegrationScopes(s string) []AgentIntegrationScope {
+	if s == "" || s == "[]" || s == "null" {
+		return nil
+	}
+	var result []AgentIntegrationScope
+	if err := json.Unmarshal([]byte(s), &result); err != nil {
+		return nil
+	}
+	if len(result) == 0 {
+		return nil
+	}
+	return result
 }
 
 // marshalStringSlice encodes a string slice to JSON. Returns "[]" for nil/empty.
