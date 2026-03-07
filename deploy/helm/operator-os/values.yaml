@@ -1,0 +1,182 @@
+# Operator OS Helm Chart — Default Values
+# Override these per-environment (values-dev.yaml, values-prod.yaml, etc.)
+
+# -- Global settings
+nameOverride: ""
+fullnameOverride: ""
+
+# -- Container image
+image:
+  repository: docker.io/standardws/operator
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+# -- Service account
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+# -- Gateway deployment (API server + channel handlers)
+gateway:
+  replicaCount: 2
+  command: ["operator", "gateway"]
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+    # maxUnavailable: 1  # Alternative to minAvailable
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+  podAnnotations: {}
+  podLabels: {}
+
+  # Extra environment variables (list of {name, value} or {name, valueFrom})
+  extraEnv: []
+
+  # Extra volume mounts
+  extraVolumeMounts: []
+  extraVolumes: []
+
+# -- Worker deployment (stateless message processors)
+worker:
+  enabled: true
+  replicaCount: 2
+  command: ["operator", "worker"]
+
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: "2"
+      memory: 1Gi
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 20
+    targetCPUUtilizationPercentage: 60
+    targetMemoryUtilizationPercentage: 75
+
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+  # Worker-specific config
+  concurrency: 4
+  processTimeout: "5m"
+  maxRetries: 3
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+  podAnnotations: {}
+  podLabels: {}
+
+  extraEnv: []
+  extraVolumeMounts: []
+  extraVolumes: []
+
+# -- Service configuration
+service:
+  type: ClusterIP
+  port: 18790
+  # nodePort: 30790  # Only if type is NodePort
+
+# -- Ingress
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    - host: operator.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: operator-tls
+  #    hosts:
+  #      - operator.example.com
+
+# -- PostgreSQL (SaaS mode)
+postgresql:
+  # Use external PostgreSQL (set dsn in secrets)
+  enabled: false
+  dsn: ""  # Override via secret; do NOT put credentials here
+
+# -- NATS JetStream (SaaS mode)
+nats:
+  enabled: false
+  url: "nats://nats:4222"
+
+# -- Redis session cache
+redis:
+  enabled: false
+  url: "redis://redis:6379"
+
+# -- Operator config (injected as ConfigMap)
+config:
+  # Log format: "json" for production, "console" for development
+  logFormat: "json"
+  logLevel: "info"
+  # Health server bind address inside container
+  healthHost: "0.0.0.0"
+  healthPort: 18790
+
+# -- Secrets (sensitive values — use external secret manager in production)
+secrets:
+  # Encryption key for credential store (required for production)
+  encryptionKey: ""
+  # JWT signing key for auth tokens
+  jwtSecret: ""
+  # Stripe API key
+  stripeKey: ""
+  stripeWebhookSecret: ""
+  # PostgreSQL DSN (if postgresql.enabled)
+  pgDSN: ""
+  # Provider API keys (map of provider → key)
+  providerKeys: {}
+  #   openai: "sk-..."
+  #   anthropic: "sk-ant-..."
+
+# -- Resource quotas for the namespace
+resourceQuota:
+  enabled: false
+  hard:
+    requests.cpu: "8"
+    requests.memory: 8Gi
+    limits.cpu: "16"
+    limits.memory: 16Gi
+    pods: "50"
+
+# -- Monitoring
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: false
+    interval: 30s
+    labels: {}

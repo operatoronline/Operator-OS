@@ -1,0 +1,19 @@
+{{- if .Values.gateway.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "operator-os.fullname" . }}-gateway
+  labels:
+    {{- include "operator-os.labels" . | nindent 4 }}
+    app.kubernetes.io/component: gateway
+spec:
+  {{- if .Values.gateway.podDisruptionBudget.minAvailable }}
+  minAvailable: {{ .Values.gateway.podDisruptionBudget.minAvailable }}
+  {{- end }}
+  {{- if .Values.gateway.podDisruptionBudget.maxUnavailable }}
+  maxUnavailable: {{ .Values.gateway.podDisruptionBudget.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "operator-os.gateway.selectorLabels" . | nindent 6 }}
+{{- end }}
