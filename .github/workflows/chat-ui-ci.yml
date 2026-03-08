@@ -1,0 +1,55 @@
+name: Chat UI — CI
+
+on:
+  push:
+    branches: [feat/chat-ui, main]
+    paths: ['web/**']
+  pull_request:
+    branches: [main]
+    paths: ['web/**']
+
+defaults:
+  run:
+    working-directory: web
+
+jobs:
+  lint-typecheck-build:
+    name: Lint → Typecheck → Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Report bundle size
+        run: |
+          echo "### Bundle Size" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          du -sh dist/ >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          find dist/assets -name '*.js' -o -name '*.css' | sort | xargs ls -lh | awk '{print $5, $9}' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload build artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: chat-ui-dist
+          path: web/dist/
+          retention-days: 7
