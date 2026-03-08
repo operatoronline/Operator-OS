@@ -269,6 +269,13 @@ select:disabled {
   50% { box-shadow: 0 0 12px oklch(0.65 0.18 145 / 0.8); }
 }
 
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-blink { animation: blink 0.8s ease-in-out infinite; }
+
 .animate-fade-slide { animation: fadeSlide 0.25s ease; }
 .animate-fade-slide-down { animation: fadeSlideDown 0.25s ease; }
 .animate-fade-in { animation: fadeIn 0.2s ease; }

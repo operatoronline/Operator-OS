@@ -1,13 +1,13 @@
 // ============================================================================
 // Operator OS — Chat Page
-// Main chat interface. Connects WebSocket on mount, shows connection state.
-// Message UI comes in C7; this establishes the transport + connection UX.
+// Main chat interface with message thread, connection state, and composer stub.
 // ============================================================================
 
 import { ChatCircle, ArrowsClockwise, WifiSlash } from '@phosphor-icons/react'
 import { useWebSocket } from '../hooks/useWebSocket'
 import { useChatStore } from '../stores/chatStore'
 import { ConnectionStatus } from '../components/chat/ConnectionStatus'
+import { MessageList } from '../components/chat/MessageList'
 import { Button } from '../components/shared'
 
 export function ChatPage() {
@@ -17,12 +17,13 @@ export function ChatPage() {
   const connectionState = useChatStore((s) => s.connectionState)
   const connect = useChatStore((s) => s.connect)
   const messages = useChatStore((s) => s.messages)
+  const isTyping = useChatStore((s) => s.isTyping)
 
   return (
     <div className="h-full flex flex-col">
       {/* ─── Connection banner (shows when not connected) ─── */}
       {(connectionState === 'reconnecting' || connectionState === 'disconnected') && (
-        <div className="flex items-center justify-center gap-2 px-4 py-2 text-xs bg-[var(--warning-subtle)] text-[var(--warning)] border-b border-[var(--border-subtle)] animate-fade-slide">
+        <div className="flex items-center justify-center gap-2 px-4 py-2 text-xs bg-[var(--warning-subtle)] text-[var(--warning)] border-b border-[var(--border-subtle)] animate-fade-slide shrink-0">
           {connectionState === 'reconnecting' ? (
             <>
               <ArrowsClockwise size={14} weight="bold" className="animate-spin" />
@@ -34,7 +35,7 @@ export function ChatPage() {
               <span>Disconnected</span>
               <button
                 onClick={() => connect()}
-                className="ml-2 underline hover:no-underline"
+                className="ml-2 underline hover:no-underline cursor-pointer"
               >
                 Retry
               </button>
@@ -44,9 +45,9 @@ export function ChatPage() {
       )}
 
       {/* ─── Chat area ─── */}
-      <div className="flex-1 flex flex-col items-center justify-center overflow-y-auto">
-        {messages.length === 0 ? (
-          /* ─── Welcome / empty state ─── */
+      {messages.length === 0 && !isTyping ? (
+        /* ─── Welcome / empty state ─── */
+        <div className="flex-1 flex flex-col items-center justify-center overflow-y-auto">
           <div className="flex flex-col items-center text-text-dim px-4 text-center">
             <div className="w-16 h-16 rounded-2xl bg-[var(--accent-subtle)] flex items-center justify-center mb-4">
               <ChatCircle size={32} weight="thin" className="text-[var(--accent-text)]" />
@@ -59,33 +60,14 @@ export function ChatPage() {
             </p>
             <ConnectionStatus showLabel />
           </div>
-        ) : (
-          /* ─── Message list placeholder (C7) ─── */
-          <div className="w-full max-w-3xl mx-auto px-4 py-6 space-y-4">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                    msg.role === 'user'
-                      ? 'bg-[var(--accent)] text-white rounded-br-md'
-                      : msg.role === 'system'
-                        ? 'bg-[var(--warning-subtle)] text-[var(--warning)] text-xs text-center w-full max-w-full rounded-lg'
-                        : 'bg-[var(--surface-2)] text-[var(--text)] rounded-bl-md'
-                  } ${msg.streaming ? 'animate-pulse-glow' : 'animate-fade-slide'}`}
-                >
-                  {msg.content}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        /* ─── Message thread ─── */
+        <MessageList messages={messages} isTyping={isTyping} />
+      )}
 
       {/* ─── Composer placeholder (C10) — minimal input for testing ─── */}
-      <div className="border-t border-[var(--border-subtle)] bg-[var(--surface)] p-3">
+      <div className="border-t border-[var(--border-subtle)] bg-[var(--surface)] p-3 shrink-0">
         <ComposerStub />
       </div>
     </div>
@@ -125,15 +107,10 @@ function ComposerStub() {
     <div className="max-w-3xl mx-auto w-full">
       {isTyping && (
         <div className="flex items-center gap-1.5 px-2 pb-2 text-xs text-[var(--text-dim)]">
-          <span className="flex gap-0.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-bounce [animation-delay:0ms]" />
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-bounce [animation-delay:150ms]" />
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-bounce [animation-delay:300ms]" />
-          </span>
-          <span>Agent is typing…</span>
+          <span>Agent is responding…</span>
           <button
             onClick={cancelGeneration}
-            className="ml-auto text-[var(--error)] hover:underline"
+            className="ml-auto text-[var(--error)] hover:underline cursor-pointer"
           >
             Cancel
           </button>
