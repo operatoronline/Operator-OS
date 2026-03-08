@@ -12,12 +12,20 @@ import {
   CaretRight,
   Prohibit,
   Users,
+  ClockCounterClockwise,
 } from '@phosphor-icons/react'
 import { useAdminStore } from '../stores/adminStore'
 import { StatsCards } from '../components/admin/StatsCards'
 import { UserTable } from '../components/admin/UserTable'
+import { AuditLog } from '../components/admin/AuditLog'
 import { ConfirmDialog } from '../components/shared/ConfirmDialog'
 import { Button } from '../components/shared/Button'
+
+// ---------------------------------------------------------------------------
+// Tab type
+// ---------------------------------------------------------------------------
+
+type AdminTab = 'users' | 'audit'
 
 // ---------------------------------------------------------------------------
 // Status filter options
@@ -36,6 +44,7 @@ const STATUS_OPTIONS = [
 
 export function AdminPage() {
   const store = useAdminStore()
+  const [activeTab, setActiveTab] = useState<AdminTab>('users')
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const [suspendTarget, setSuspendTarget] = useState<string | null>(null)
   const [roleTarget, setRoleTarget] = useState<{ id: string; role: 'user' | 'admin' } | null>(null)
@@ -126,14 +135,48 @@ export function AdminPage() {
       {/* ─── Header ─── */}
       <div className="shrink-0 px-4 md:px-6 pt-4 md:pt-6 pb-4 space-y-4">
         {/* Title */}
-        <div>
-          <h1 className="text-lg font-bold text-[var(--text)] flex items-center gap-2">
-            <ShieldCheck size={22} weight="fill" className="text-[var(--accent-text)]" />
-            Admin Panel
-          </h1>
-          <p className="text-xs text-[var(--text-dim)] mt-0.5">
-            Manage users, roles, and platform settings
-          </p>
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h1 className="text-lg font-bold text-[var(--text)] flex items-center gap-2">
+              <ShieldCheck size={22} weight="fill" className="text-[var(--accent-text)]" />
+              Admin Panel
+            </h1>
+            <p className="text-xs text-[var(--text-dim)] mt-0.5">
+              Manage users, roles, and platform settings
+            </p>
+          </div>
+
+          {/* Tab switcher */}
+          <div className="flex items-center gap-1 bg-[var(--surface-2)] rounded-full p-0.5">
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`
+                inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium
+                transition-all duration-150 cursor-pointer
+                ${activeTab === 'users'
+                  ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm'
+                  : 'text-[var(--text-dim)] hover:text-[var(--text-secondary)]'
+                }
+              `}
+            >
+              <Users size={14} />
+              Users
+            </button>
+            <button
+              onClick={() => setActiveTab('audit')}
+              className={`
+                inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium
+                transition-all duration-150 cursor-pointer
+                ${activeTab === 'audit'
+                  ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm'
+                  : 'text-[var(--text-dim)] hover:text-[var(--text-secondary)]'
+                }
+              `}
+            >
+              <ClockCounterClockwise size={14} />
+              Audit Log
+            </button>
+          </div>
         </div>
 
         {/* Error banners */}
@@ -165,100 +208,110 @@ export function AdminPage() {
           </div>
         )}
 
-        {/* Stats cards */}
-        <StatsCards stats={store.stats} loading={store.loadingStats} />
+        {/* Stats cards (users tab only) */}
+        {activeTab === 'users' && (
+          <StatsCards stats={store.stats} loading={store.loadingStats} />
+        )}
 
-        {/* Search + filter bar */}
-        <div className="flex items-center gap-3 flex-wrap">
-          {/* Search */}
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <MagnifyingGlass
-              size={15}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)]"
-            />
-            <input
-              type="text"
-              placeholder="Search users by name or email…"
-              value={store.filters.search}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full h-9 pl-9 pr-3
-                bg-[var(--surface-2)] border border-[var(--border-subtle)]
-                rounded-full text-xs text-[var(--text)]
-                placeholder:text-[var(--text-dim)]
-                focus:border-[var(--accent)] focus:outline-none
-                transition-colors"
-            />
-          </div>
+        {/* Search + filter bar (users tab only) */}
+        {activeTab === 'users' && (
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Search */}
+            <div className="relative flex-1 min-w-[200px] max-w-sm">
+              <MagnifyingGlass
+                size={15}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-dim)]"
+              />
+              <input
+                type="text"
+                placeholder="Search users by name or email…"
+                value={store.filters.search}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="w-full h-9 pl-9 pr-3
+                  bg-[var(--surface-2)] border border-[var(--border-subtle)]
+                  rounded-full text-xs text-[var(--text)]
+                  placeholder:text-[var(--text-dim)]
+                  focus:border-[var(--accent)] focus:outline-none
+                  transition-colors"
+              />
+            </div>
 
-          {/* Status filter pills */}
-          <div className="flex items-center gap-1 bg-[var(--surface-2)] rounded-full p-0.5">
-            {STATUS_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => store.setStatusFilter(opt.value)}
-                className={`
-                  px-3 py-1.5 rounded-full text-xs font-medium
-                  transition-all duration-150 cursor-pointer
-                  ${store.filters.status === opt.value
-                    ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm'
-                    : 'text-[var(--text-dim)] hover:text-[var(--text-secondary)]'
-                  }
-                `}
-              >
-                {opt.value === '' && <Users size={12} className="inline mr-1 -mt-0.5" />}
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ─── User Table ─── */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-6 pb-4">
-        <UserTable
-          users={store.users}
-          loading={store.loadingUsers}
-          actionLoading={store.actionLoading}
-          onSuspend={(id) => setSuspendTarget(id)}
-          onActivate={handleActivate}
-          onSetRole={(id, role) => setRoleTarget({ id, role })}
-          onDelete={(id) => setDeleteTarget(id)}
-        />
-
-        {/* Pagination */}
-        {!store.loadingUsers && store.users.length > 0 && (
-          <div className="flex items-center justify-between mt-4 px-1">
-            <p className="text-xs text-[var(--text-dim)] tabular-nums">
-              Page {store.filters.page}
-              {store.users.length > 0 && (
-                <span> · {store.users.length} user{store.users.length !== 1 ? 's' : ''}</span>
-              )}
-            </p>
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => store.setPage(store.filters.page - 1)}
-                disabled={!hasPrevPage}
-                className="p-1.5 rounded-lg text-[var(--text-dim)]
-                  hover:text-[var(--text)] hover:bg-[var(--surface-2)]
-                  disabled:opacity-30 disabled:cursor-not-allowed
-                  transition-colors cursor-pointer"
-                aria-label="Previous page"
-              >
-                <CaretLeft size={16} />
-              </button>
-              <button
-                onClick={() => store.setPage(store.filters.page + 1)}
-                disabled={!hasNextPage}
-                className="p-1.5 rounded-lg text-[var(--text-dim)]
-                  hover:text-[var(--text)] hover:bg-[var(--surface-2)]
-                  disabled:opacity-30 disabled:cursor-not-allowed
-                  transition-colors cursor-pointer"
-                aria-label="Next page"
-              >
-                <CaretRight size={16} />
-              </button>
+            {/* Status filter pills */}
+            <div className="flex items-center gap-1 bg-[var(--surface-2)] rounded-full p-0.5">
+              {STATUS_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => store.setStatusFilter(opt.value)}
+                  className={`
+                    px-3 py-1.5 rounded-full text-xs font-medium
+                    transition-all duration-150 cursor-pointer
+                    ${store.filters.status === opt.value
+                      ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm'
+                      : 'text-[var(--text-dim)] hover:text-[var(--text-secondary)]'
+                    }
+                  `}
+                >
+                  {opt.value === '' && <Users size={12} className="inline mr-1 -mt-0.5" />}
+                  {opt.label}
+                </button>
+              ))}
             </div>
           </div>
+        )}
+      </div>
+
+      {/* ─── Tab content ─── */}
+      <div className="flex-1 overflow-y-auto px-4 md:px-6 pb-4">
+        {activeTab === 'users' ? (
+          <>
+            <UserTable
+              users={store.users}
+              loading={store.loadingUsers}
+              actionLoading={store.actionLoading}
+              onSuspend={(id) => setSuspendTarget(id)}
+              onActivate={handleActivate}
+              onSetRole={(id, role) => setRoleTarget({ id, role })}
+              onDelete={(id) => setDeleteTarget(id)}
+            />
+
+            {/* Pagination */}
+            {!store.loadingUsers && store.users.length > 0 && (
+              <div className="flex items-center justify-between mt-4 px-1">
+                <p className="text-xs text-[var(--text-dim)] tabular-nums">
+                  Page {store.filters.page}
+                  {store.users.length > 0 && (
+                    <span> · {store.users.length} user{store.users.length !== 1 ? 's' : ''}</span>
+                  )}
+                </p>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => store.setPage(store.filters.page - 1)}
+                    disabled={!hasPrevPage}
+                    className="p-1.5 rounded-lg text-[var(--text-dim)]
+                      hover:text-[var(--text)] hover:bg-[var(--surface-2)]
+                      disabled:opacity-30 disabled:cursor-not-allowed
+                      transition-colors cursor-pointer"
+                    aria-label="Previous page"
+                  >
+                    <CaretLeft size={16} />
+                  </button>
+                  <button
+                    onClick={() => store.setPage(store.filters.page + 1)}
+                    disabled={!hasNextPage}
+                    className="p-1.5 rounded-lg text-[var(--text-dim)]
+                      hover:text-[var(--text)] hover:bg-[var(--surface-2)]
+                      disabled:opacity-30 disabled:cursor-not-allowed
+                      transition-colors cursor-pointer"
+                    aria-label="Next page"
+                  >
+                    <CaretRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <AuditLog />
         )}
       </div>
 
