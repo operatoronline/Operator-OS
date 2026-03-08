@@ -1,4 +1,6 @@
 export { Button } from './Button'
 export { Badge } from './Badge'
 export { Input } from './Input'
+export { Modal } from './Modal'
+export { ConfirmDialog } from './ConfirmDialog'
 export { ProtectedRoute } from './ProtectedRoute'
