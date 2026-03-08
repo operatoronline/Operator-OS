@@ -90,7 +90,7 @@ Evolve the existing chat interface into a full production platform client. The c
 
 | ID | Task | Priority | Status | Description |
 |---|---|---|---|---|
-| C1 | React scaffold | P0 | ⬜ TODO | `web/` → Vite + React 19 + TypeScript. Tailwind v4 with OKLCH tokens ported from existing `index.html`. Directory: `src/{components,pages,hooks,services,stores,types}`. DM Sans + JetBrains Mono + Phosphor Icons carried over. Archive `index.html` → `web/legacy/index.html` as reference. |
+| C1 | React scaffold | P0 | ✅ DONE | `web/` → Vite + React 19 + TypeScript. Tailwind v4 with OKLCH tokens ported from existing `index.html`. Directory: `src/{components,pages,hooks,services,stores,types}`. DM Sans + JetBrains Mono + Phosphor Icons carried over. Archive `index.html` → `web/legacy/index.html` as reference. **Done 2026-03-08:** Full scaffold with Vite 6, React 19, TS, Tailwind v4 `@theme` mapping all OKLCH tokens. AppShell with floating pill nav (desktop) + bottom tabs (mobile). Zustand uiStore for theme toggle. Stub pages for all 6 routes. Login page shell. Build passes clean (273 KB JS gzipped to 85 KB). |
 | C2 | API client + types | P0 | ⬜ TODO | `src/services/api.ts` — typed fetch client for all 60+ backend endpoints. Auto-attach JWT. Refresh token interceptor. Error normalization with typed error responses. Generate request/response types from OpenAPI spec (`/api/v1/docs/openapi.json`). |
 | C3 | Auth flows | P0 | ⬜ TODO | `src/pages/{Login,Register,Verify}.tsx`. Zustand auth store (user, tokens, isAuthenticated). `<ProtectedRoute>` wrapper. Redirect to `/login` on 401. Calls: `POST /auth/register`, `POST /auth/login`, `POST /auth/verify-email`, `POST /auth/resend-verification`, `POST /auth/refresh`. |
 | C4 | App shell & routing | P0 | ⬜ TODO | `<AppShell>` with collapsible sidebar, top bar (user menu, theme toggle, logout). React Router v7. Routes: `/chat`, `/agents`, `/integrations`, `/billing`, `/settings`, `/admin`. Mobile: bottom tab nav mirroring the existing pill pattern. |
@@ -221,3 +221,4 @@ src/
 | 2026-03-08 | Initial plan created. 28 tasks across 6 phases + 7 backend requirements. |
 | 2026-03-08 | Updated: plan now builds on existing `web/index.html` (1568-line chat UI). Branch: `feat/chat-ui`. Deployment: `os-go.operator.onl`. |
 | 2026-03-08 | Migrated to React 19 + TypeScript + Vite + Tailwind v4 + Zustand. Existing `index.html` becomes reference (archived to `web/legacy/`). All tasks updated for component architecture. Added component inventory. |
+| 2026-03-08 | C1 complete: React scaffold. Vite 6 + React 19 + TS + Tailwind v4. Full OKLCH token system ported via CSS vars + `@theme`. AppShell, routing, theme store, stub pages, login shell. Build clean. |

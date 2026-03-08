@@ -1,0 +1,171 @@
+@import "tailwindcss";
+
+/* ─── OKLCH Design Tokens ─── */
+/* Ported from legacy/index.html — the canonical visual identity */
+
+:root {
+  /* Spacing scale */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+
+  /* Radii */
+  --radius: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+
+  /* Typography */
+  --font: 'DM Sans', -apple-system, system-ui, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+
+  /* Safe area */
+  --safe-b: env(safe-area-inset-bottom, 0px);
+}
+
+/* ─── Dark theme (default) ─── */
+.dark {
+  --bg: oklch(0.08 0 0);
+  --surface: oklch(0.13 0 0);
+  --surface-2: oklch(0.17 0 0);
+  --surface-3: oklch(0.21 0 0);
+  --border: oklch(0.22 0 0);
+  --border-subtle: oklch(0.18 0 0);
+  --text: oklch(0.92 0 0);
+  --text-secondary: oklch(0.65 0 0);
+  --text-dim: oklch(0.45 0 0);
+  --accent: oklch(0.58 0.14 260);
+  --accent-subtle: oklch(0.22 0.05 260);
+  --accent-text: oklch(0.75 0.12 260);
+  --success: oklch(0.65 0.18 145);
+  --success-subtle: oklch(0.20 0.05 145);
+  --warning: oklch(0.72 0.15 85);
+  --warning-subtle: oklch(0.20 0.05 85);
+  --error: oklch(0.62 0.20 25);
+  --error-subtle: oklch(0.20 0.05 25);
+  --tool-bg: oklch(0.13 0.015 260);
+  --tool-border: oklch(0.24 0.04 260);
+  --user-bg: oklch(0.18 0.04 260);
+  --user-border: oklch(0.26 0.05 260);
+  --glass-bg: oklch(0.14 0 0 / 0.85);
+  --glass-border: oklch(0.28 0 0 / 0.6);
+  --glass-inset: oklch(1 0 0 / 0.04);
+  --glass-shadow: oklch(0 0 0 / 0.4);
+  --scrollthumb: oklch(0.25 0 0);
+  --code-surface: oklch(0.13 0 0);
+}
+
+/* ─── Light theme ─── */
+.light {
+  --bg: oklch(0.97 0 0);
+  --surface: oklch(1 0 0);
+  --surface-2: oklch(0.95 0 0);
+  --surface-3: oklch(0.92 0 0);
+  --border: oklch(0.88 0 0);
+  --border-subtle: oklch(0.92 0 0);
+  --text: oklch(0.15 0 0);
+  --text-secondary: oklch(0.42 0 0);
+  --text-dim: oklch(0.58 0 0);
+  --accent: oklch(0.50 0.16 260);
+  --accent-subtle: oklch(0.92 0.04 260);
+  --accent-text: oklch(0.45 0.14 260);
+  --success: oklch(0.52 0.16 145);
+  --success-subtle: oklch(0.92 0.04 145);
+  --warning: oklch(0.55 0.14 85);
+  --warning-subtle: oklch(0.92 0.05 85);
+  --error: oklch(0.52 0.18 25);
+  --error-subtle: oklch(0.92 0.05 25);
+  --tool-bg: oklch(0.96 0.01 260);
+  --tool-border: oklch(0.88 0.03 260);
+  --user-bg: oklch(0.93 0.03 260);
+  --user-border: oklch(0.86 0.05 260);
+  --glass-bg: oklch(1 0 0 / 0.75);
+  --glass-border: oklch(0.82 0 0 / 0.6);
+  --glass-inset: oklch(1 0 0 / 0.5);
+  --glass-shadow: oklch(0 0 0 / 0.08);
+  --scrollthumb: oklch(0.82 0 0);
+  --code-surface: oklch(0.96 0 0);
+}
+
+/* ─── Tailwind v4 theme extension ─── */
+@theme {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-text: var(--text);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-dim: var(--text-dim);
+  --color-accent: var(--accent);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-accent-text: var(--accent-text);
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-error: var(--error);
+  --color-error-subtle: var(--error-subtle);
+  --color-glass-bg: var(--glass-bg);
+  --color-glass-border: var(--glass-border);
+  --color-glass-shadow: var(--glass-shadow);
+  --color-user-bg: var(--user-bg);
+  --color-user-border: var(--user-border);
+  --color-tool-bg: var(--tool-bg);
+  --color-tool-border: var(--tool-border);
+  --color-code-surface: var(--code-surface);
+  --color-scrollthumb: var(--scrollthumb);
+
+  --font-family-sans: var(--font);
+  --font-family-mono: var(--mono);
+
+  --radius-xs: var(--radius-xs);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius);
+}
+
+/* ─── Base resets ─── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-text-size-adjust: 100%;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* ─── Scrollbar styling ─── */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--scrollthumb); border-radius: 2px; }
+
+/* ─── Animations ─── */
+@keyframes fadeSlide {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0.5); opacity: 0.3; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+.animate-fade-slide {
+  animation: fadeSlide 0.25s ease;
+}
