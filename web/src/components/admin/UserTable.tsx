@@ -137,6 +137,12 @@ const UserRow = memo(function UserRow({
           {user.role === 'admin' && (
             <Crown size={13} weight="fill" className="text-[var(--accent-text)] shrink-0" />
           )}
+          {/* Status inline on mobile (hidden on sm+ where column shows) */}
+          <span className="sm:hidden">
+            <Badge variant={statusVariant(user.status)} dot>
+              {statusLabel(user.status)}
+            </Badge>
+          </span>
         </div>
         <div className="flex items-center gap-2 mt-0.5">
           <span className="text-xs text-[var(--text-dim)] truncate">{user.email}</span>
@@ -173,8 +179,9 @@ const UserRow = memo(function UserRow({
       <div ref={menuRef} className="relative shrink-0">
         <button
           onClick={() => setMenuOpen((o) => !o)}
-          className="p-1.5 rounded-lg text-[var(--text-dim)] hover:text-[var(--text)]
-            hover:bg-[var(--surface-2)] transition-colors cursor-pointer"
+          className="p-2.5 md:p-1.5 rounded-lg text-[var(--text-dim)] hover:text-[var(--text)]
+            hover:bg-[var(--surface-2)] transition-colors cursor-pointer
+            active:scale-95 active:opacity-80"
           aria-label="User actions"
         >
           <DotsThreeVertical size={18} weight="bold" />

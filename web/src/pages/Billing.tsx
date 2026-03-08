@@ -164,8 +164,8 @@ export function BillingPage() {
   const usageError = summaryError || dailyError || modelsError || limitsError || overageError
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+    <div className="h-full overflow-y-auto scroll-touch">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* ─── Header ─── */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-text mb-2">

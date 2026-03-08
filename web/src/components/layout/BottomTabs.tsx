@@ -1,6 +1,7 @@
 // ============================================================================
 // Operator OS — Bottom Tab Navigation (Mobile)
-// Fixed bottom tabs for mobile devices with safe area support.
+// Fixed bottom tabs for mobile devices. Proper safe area insets, 44px min
+// touch targets, glass morphism background matching the legacy pill nav.
 // ============================================================================
 
 import { NavLink } from 'react-router-dom'
@@ -22,8 +23,13 @@ const tabs = [
 
 export function BottomTabs() {
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-80 bg-glass-bg backdrop-blur-[20px] saturate-[1.4] border-t border-glass-border pb-[var(--safe-b)]">
-      <div className="flex items-center justify-around px-2 py-2">
+    <nav
+      className="md:hidden fixed bottom-0 left-0 right-0 z-80
+        bg-glass-bg backdrop-blur-[20px] saturate-[1.4]
+        border-t border-glass-border"
+      style={{ paddingBottom: 'var(--safe-b)' }}
+    >
+      <div className="flex items-center justify-around px-1">
         {tabs.map((item) => {
           const Icon = item.icon
           return (
@@ -31,15 +37,18 @@ export function BottomTabs() {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg text-[10px] font-medium transition-colors duration-200 ${
-                  isActive ? 'text-accent-text' : 'text-text-dim'
-                }`
+                `flex flex-col items-center justify-center gap-0.5
+                 min-w-[44px] min-h-[44px] px-2 py-1
+                 rounded-lg text-[10px] font-medium
+                 transition-colors duration-200 select-none
+                 active:scale-95 active:opacity-80
+                 ${isActive ? 'text-accent-text' : 'text-text-dim'}`
               }
             >
               {({ isActive }) => (
                 <>
-                  <Icon size={20} weight={isActive ? 'fill' : 'regular'} />
-                  {item.label}
+                  <Icon size={22} weight={isActive ? 'fill' : 'regular'} />
+                  <span className="leading-none">{item.label}</span>
                 </>
               )}
             </NavLink>

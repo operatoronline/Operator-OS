@@ -229,7 +229,7 @@ export function IntegrationsPage() {
       </div>
 
       {/* ─── Grid ─── */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-6 pb-6">
+      <div className="flex-1 overflow-y-auto scroll-touch px-4 md:px-6 pb-6">
         <IntegrationGrid
           integrations={displayedIntegrations}
           statuses={store.statuses}

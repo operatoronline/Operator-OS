@@ -148,8 +148,8 @@ export function AdminPage() {
             </p>
           </div>
 
-          {/* Tab switcher */}
-          <div className="flex items-center gap-1 bg-[var(--surface-2)] rounded-full p-0.5">
+          {/* Tab switcher — scrollable on narrow screens */}
+          <div className="flex items-center gap-1 bg-[var(--surface-2)] rounded-full p-0.5 overflow-x-auto scrollbar-none">
             <button
               onClick={() => setActiveTab('users')}
               className={`
@@ -277,7 +277,7 @@ export function AdminPage() {
       </div>
 
       {/* ─── Tab content ─── */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-6 pb-4">
+      <div className="flex-1 overflow-y-auto scroll-touch px-4 md:px-6 pb-4">
         {activeTab === 'security' ? (
           <SecurityDashboard />
         ) : activeTab === 'users' ? (

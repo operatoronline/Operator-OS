@@ -66,6 +66,7 @@ export function MobileSidebar({ open, onClose }: MobileSidebarProps) {
         className={`md:hidden fixed top-0 left-0 bottom-0 z-100 w-64 bg-surface border-r border-border shadow-[4px_0_24px_var(--glass-shadow)] transition-transform duration-200 ease-out ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
+        style={{ paddingTop: 'var(--safe-t)', paddingLeft: 'var(--safe-l)' }}
         role="dialog"
         aria-modal="true"
         aria-label="Navigation menu"
@@ -97,7 +98,9 @@ export function MobileSidebar({ open, onClose }: MobileSidebarProps) {
                 to={item.to}
                 onClick={onClose}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14px] font-medium transition-all duration-150 ${
+                  `flex items-center gap-3 px-3 py-3 rounded-lg text-[14px] font-medium
+                   min-h-[44px] select-none active:scale-[0.98] active:opacity-80
+                   transition-all duration-150 ${
                     isActive
                       ? 'bg-surface-2 text-text shadow-[inset_0_0_0_1px_var(--border)]'
                       : 'text-text-dim hover:text-text-secondary hover:bg-surface-2/50'

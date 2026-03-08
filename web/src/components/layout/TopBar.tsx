@@ -49,7 +49,10 @@ export function TopBar() {
   }, [menuOpen])
 
   return (
-    <header className="flex items-center justify-between h-14 px-4 md:px-6 border-b border-border-subtle bg-surface/50 backdrop-blur-sm shrink-0 z-40">
+    <header
+      className="flex items-center justify-between h-14 px-4 md:px-6 border-b border-border-subtle bg-surface/50 backdrop-blur-sm shrink-0 z-40"
+      style={{ paddingTop: 'var(--safe-t)' }}
+    >
       {/* ─── Left: mobile menu + page title ─── */}
       <div className="flex items-center gap-3">
         {/* Mobile hamburger — toggles sidebar (handled via mobile overlay in future) */}

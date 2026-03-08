@@ -339,13 +339,14 @@ export function Composer({ models, activeModel, onModelChange }: ComposerProps) 
         {/* ─── Input row ─── */}
         {!isDragging && (
           <div className="flex items-end gap-2">
-            {/* Attach button */}
+            {/* Attach button — 44px touch target on mobile */}
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={disabled || attachments.length >= MAX_ATTACHMENTS}
-              className="shrink-0 w-9 h-9 flex items-center justify-center rounded-[10px]
+              className="shrink-0 w-11 h-11 md:w-9 md:h-9 flex items-center justify-center rounded-[10px]
                 text-text-dim hover:text-text hover:bg-surface-2/60
+                active:scale-95 active:opacity-80
                 transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
               aria-label="Attach file"
             >
@@ -362,7 +363,7 @@ export function Composer({ models, activeModel, onModelChange }: ComposerProps) 
               onChange={handleFileInputChange}
             />
 
-            {/* Textarea */}
+            {/* Textarea — 16px on mobile to prevent iOS Safari zoom */}
             <textarea
               ref={textareaRef}
               value={value}
@@ -378,7 +379,8 @@ export function Composer({ models, activeModel, onModelChange }: ComposerProps) 
                     ? 'Connecting…'
                     : 'Message Operator OS…'
               }
-              className="flex-1 resize-none bg-transparent text-[var(--text)] text-[15px] leading-[1.4]
+              className="flex-1 resize-none bg-transparent text-[var(--text)]
+                text-[16px] md:text-[15px] leading-[1.4]
                 border-none outline-none py-2 px-2.5
                 placeholder:text-[var(--text-dim)]
                 disabled:opacity-50
@@ -436,12 +438,12 @@ export function Composer({ models, activeModel, onModelChange }: ComposerProps) 
               </div>
             )}
 
-            {/* Send button */}
+            {/* Send button — 44px touch target on mobile */}
             <button
               type="button"
               onClick={() => handleSubmit()}
               disabled={disabled || !canSend}
-              className="shrink-0 w-9 h-9 flex items-center justify-center rounded-[10px]
+              className="shrink-0 w-11 h-11 md:w-9 md:h-9 flex items-center justify-center rounded-[10px]
                 bg-accent text-white
                 hover:opacity-85 active:scale-[0.94]
                 transition-all duration-150

@@ -38,7 +38,8 @@ export function AppShell() {
         <TopBar />
 
         {/* ─── Page content ─── */}
-        <main className="flex-1 relative overflow-hidden">
+        {/* pb on mobile to clear fixed BottomTabs */}
+        <main className="flex-1 relative overflow-hidden pb-[var(--bottom-tabs-h)] md:pb-0">
           <Outlet />
         </main>
       </div>

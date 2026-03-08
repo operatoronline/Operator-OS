@@ -381,7 +381,7 @@ export function SessionPanel({ open = true, onClose, mobile = false }: SessionPa
       )}
 
       {/* ─── Session list ─── */}
-      <div className="flex-1 overflow-y-auto px-2 py-1">
+      <div className="flex-1 overflow-y-auto scroll-touch px-2 py-1">
         {loading && sessions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-[var(--text-dim)]">
             <SpinnerGap size={24} className="animate-spin mb-2" />
@@ -525,6 +525,7 @@ export function SessionPanel({ open = true, onClose, mobile = false }: SessionPa
             transition-transform duration-300 ease-out md:hidden
             ${open ? 'translate-x-0' : '-translate-x-full'}
           `}
+          style={{ paddingTop: 'var(--safe-t)', paddingBottom: 'var(--bottom-tabs-h)' }}
         >
           {panelContent}
         </div>

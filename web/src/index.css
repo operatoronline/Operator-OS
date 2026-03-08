@@ -24,8 +24,14 @@
   --font: 'DM Sans', -apple-system, system-ui, sans-serif;
   --mono: 'JetBrains Mono', monospace;
 
-  /* Safe area */
+  /* Safe area insets (viewport-fit=cover in HTML) */
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
   --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+
+  /* Bottom tabs height (icon 20 + text 10 + padding 16 ≈ 46) + safe area */
+  --bottom-tabs-h: calc(46px + var(--safe-b));
 }
 
 /* ─── Dark theme (default) ─── */
@@ -145,6 +151,7 @@
 
 html, body, #root {
   height: 100%;
+  height: 100dvh; /* Use dynamic viewport height for iOS Safari */
   overflow: hidden;
 }
 
@@ -153,7 +160,51 @@ body {
   background: var(--bg);
   color: var(--text);
   -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent; /* Remove blue highlight on tap */
+  overscroll-behavior: none; /* Prevent pull-to-refresh and rubber-banding */
   transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* ─── iOS input zoom prevention ─── */
+/* iOS Safari zooms if font-size < 16px on focus */
+@supports (-webkit-touch-callout: none) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="url"],
+  input[type="number"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* ─── Mobile utilities ─── */
+/* Content area must clear the fixed bottom tabs on mobile */
+.mobile-safe-bottom {
+  padding-bottom: var(--bottom-tabs-h);
+}
+
+@media (min-width: 768px) {
+  .mobile-safe-bottom {
+    padding-bottom: 0;
+  }
+}
+
+/* Smooth momentum scrolling for touch */
+.scroll-touch {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* Hide scrollbar but keep scroll (mobile panels) */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
 
 /* ─── Scrollbar styling ─── */

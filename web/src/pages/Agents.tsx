@@ -107,9 +107,9 @@ export function AgentsPage() {
   return (
     <div className="h-full flex flex-col overflow-hidden">
       {/* ─── Header ─── */}
-      <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-[var(--border-subtle)] shrink-0">
-        <div className="flex items-center gap-3 min-w-0">
-          <h1 className="text-base font-semibold text-[var(--text)] truncate">
+      <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3 sm:py-4 border-b border-[var(--border-subtle)] shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <h1 className="text-sm sm:text-base font-semibold text-[var(--text)] truncate">
             Agents
           </h1>
           {agents.length > 0 && (
@@ -118,9 +118,9 @@ export function AgentsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Filter pills */}
+          {/* Filter pills — scrollable on mobile */}
           {agents.length > 0 && (
-            <div className="hidden sm:flex items-center gap-1 mr-2">
+            <div className="flex items-center gap-1 mr-1 sm:mr-2 overflow-x-auto scrollbar-none">
               <FilterPill
                 label="All"
                 count={agents.length}
@@ -163,7 +163,7 @@ export function AgentsPage() {
       )}
 
       {/* ─── Content ─── */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto scroll-touch p-4 sm:p-6">
         <AgentList
           agents={filteredAgents}
           loading={loading}

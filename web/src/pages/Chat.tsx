@@ -43,7 +43,7 @@ export function ChatPage() {
   const hasSession = !!activeSessionId
 
   return (
-    <div className="h-full flex">
+    <div className="h-full flex overflow-hidden">
       {/* ─── Desktop session panel ─── */}
       <SessionPanel />
 
