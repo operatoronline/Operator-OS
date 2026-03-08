@@ -1,6 +1,6 @@
 // ============================================================================
 // Operator OS — Chat Page
-// Main chat interface with message thread, connection state, and composer stub.
+// Main chat interface with message thread, connection state, and composer.
 // ============================================================================
 
 import { ChatCircle, ArrowsClockwise, WifiSlash, Stop } from '@phosphor-icons/react'
@@ -8,7 +8,7 @@ import { useWebSocket } from '../hooks/useWebSocket'
 import { useChatStore } from '../stores/chatStore'
 import { ConnectionStatus } from '../components/chat/ConnectionStatus'
 import { MessageList } from '../components/chat/MessageList'
-import { Button } from '../components/shared'
+import { Composer } from '../components/chat/Composer'
 
 export function ChatPage() {
   // Activate WebSocket connection while on this page
@@ -90,68 +90,10 @@ export function ChatPage() {
         </div>
       )}
 
-      {/* ─── Composer (C10 will upgrade to full composer with file upload) ─── */}
+      {/* ─── Composer ─── */}
       <div className="border-t border-[var(--border-subtle)] bg-[var(--surface)] p-3 shrink-0">
-        <ComposerStub />
+        <Composer />
       </div>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Minimal composer for testing (replaced in C10 with full Composer component)
-// ---------------------------------------------------------------------------
-
-function ComposerStub() {
-  const sendMessage = useChatStore((s) => s.sendMessage)
-  const connectionState = useChatStore((s) => s.connectionState)
-  const streamingMessageId = useChatStore((s) => s.streamingMessageId)
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const form = e.currentTarget
-    const input = form.elements.namedItem('message') as HTMLInputElement
-    if (!input.value.trim()) return
-    sendMessage(input.value)
-    input.value = ''
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      const form = e.currentTarget.form
-      if (form) form.requestSubmit()
-    }
-  }
-
-  const disabled = connectionState !== 'connected' || !!streamingMessageId
-
-  return (
-    <div className="max-w-3xl mx-auto w-full">
-      <form onSubmit={handleSubmit} className="flex items-end gap-2">
-        <textarea
-          name="message"
-          rows={1}
-          placeholder={
-            streamingMessageId
-              ? 'Waiting for response…'
-              : disabled
-                ? 'Connecting…'
-                : 'Message Operator OS…'
-          }
-          disabled={disabled}
-          onKeyDown={handleKeyDown}
-          className="flex-1 resize-none bg-[var(--surface-2)] text-[var(--text)] text-sm rounded-xl px-4 py-2.5 border border-[var(--border-subtle)] focus:border-[var(--accent)] focus:outline-none placeholder:text-[var(--text-dim)] disabled:opacity-50 transition-colors"
-          style={{ maxHeight: 120 }}
-        />
-        <Button
-          type="submit"
-          size="sm"
-          disabled={disabled}
-        >
-          Send
-        </Button>
-      </form>
     </div>
   )
 }
