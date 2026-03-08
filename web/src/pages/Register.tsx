@@ -1,30 +1,48 @@
 // ============================================================================
-// Operator OS — Login Page
-// Email + password sign-in with error display and register link.
+// Operator OS — Register Page
+// Email + password + display name registration with verification redirect.
 // ============================================================================
 
 import { useState } from 'react'
-import { useNavigate, useLocation, Link } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
 
-export function LoginPage() {
+export function RegisterPage() {
   const navigate = useNavigate()
-  const location = useLocation()
-  const { login, isLoading, error, clearError } = useAuthStore()
+  const { register, isLoading, error, clearError } = useAuthStore()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [displayName, setDisplayName] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [localError, setLocalError] = useState<string | null>(null)
 
-  // Where to redirect after successful login
-  const from = (location.state as { from?: string })?.from || '/chat'
+  const combinedError = localError || error
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setLocalError(null)
+
     if (!email || !password) return
 
+    if (password.length < 8) {
+      setLocalError('Password must be at least 8 characters')
+      return
+    }
+
+    if (password !== confirmPassword) {
+      setLocalError('Passwords do not match')
+      return
+    }
+
     try {
-      await login({ email, password })
-      navigate(from, { replace: true })
+      await register({
+        email,
+        password,
+        display_name: displayName || undefined,
+      })
+      // Redirect to verify page with email for resend functionality
+      navigate('/verify', { state: { email }, replace: true })
     } catch {
       // Error is captured in store
     }
@@ -36,20 +54,23 @@ export function LoginPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-text tracking-tight">
-            Operator OS
+            Create Account
           </h1>
           <p className="text-sm text-text-secondary mt-1">
-            Sign in to continue
+            Get started with Operator OS
           </p>
         </div>
 
         {/* Error banner */}
-        {error && (
+        {combinedError && (
           <div className="mb-4 px-4 py-3 bg-error-subtle border border-error/20 rounded-[var(--radius-sm)] text-sm text-error flex items-start gap-2">
             <span className="shrink-0 mt-0.5">⚠</span>
-            <span className="flex-1">{error}</span>
+            <span className="flex-1">{combinedError}</span>
             <button
-              onClick={clearError}
+              onClick={() => {
+                setLocalError(null)
+                clearError()
+              }}
               className="shrink-0 text-error/60 hover:text-error transition-colors"
               aria-label="Dismiss error"
             >
@@ -61,50 +82,69 @@ export function LoginPage() {
         {/* Form */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <input
+            type="text"
+            placeholder="Display name (optional)"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            autoComplete="name"
+            autoFocus
+            disabled={isLoading}
+            className="w-full px-4 py-3 bg-surface border border-border rounded-[var(--radius-sm)] text-text text-sm placeholder:text-text-dim outline-none focus:border-accent transition-colors disabled:opacity-50"
+          />
+          <input
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
-            autoFocus
             required
             disabled={isLoading}
             className="w-full px-4 py-3 bg-surface border border-border rounded-[var(--radius-sm)] text-text text-sm placeholder:text-text-dim outline-none focus:border-accent transition-colors disabled:opacity-50"
           />
           <input
             type="password"
-            placeholder="Password"
+            placeholder="Password (min. 8 characters)"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
+            autoComplete="new-password"
+            required
+            disabled={isLoading}
+            className="w-full px-4 py-3 bg-surface border border-border rounded-[var(--radius-sm)] text-text text-sm placeholder:text-text-dim outline-none focus:border-accent transition-colors disabled:opacity-50"
+          />
+          <input
+            type="password"
+            placeholder="Confirm password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            autoComplete="new-password"
             required
             disabled={isLoading}
             className="w-full px-4 py-3 bg-surface border border-border rounded-[var(--radius-sm)] text-text text-sm placeholder:text-text-dim outline-none focus:border-accent transition-colors disabled:opacity-50"
           />
           <button
             type="submit"
-            disabled={isLoading || !email || !password}
+            disabled={isLoading || !email || !password || !confirmPassword}
             className="w-full py-3 bg-accent text-white text-sm font-semibold rounded-[var(--radius-sm)] hover:opacity-90 transition-opacity mt-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Signing in…
+                Creating account…
               </>
             ) : (
-              'Sign In'
+              'Create Account'
             )}
           </button>
         </form>
 
         {/* Footer */}
         <p className="text-center text-xs text-text-dim mt-6">
-          Don't have an account?{' '}
+          Already have an account?{' '}
           <Link
-            to="/register"
+            to="/login"
             className="text-accent-text hover:underline"
           >
-            Register
+            Sign in
           </Link>
         </p>
       </div>

@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useLocation } from 'react-router-dom'
+import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import {
   ChatCircle,
   Robot,
@@ -8,8 +8,10 @@ import {
   ShieldCheck,
   Sun,
   Moon,
+  SignOut,
 } from '@phosphor-icons/react'
 import { useUIStore } from '../../stores/uiStore'
+import { useAuthStore } from '../../stores/authStore'
 
 const navItems = [
   { to: '/chat', label: 'Chat', icon: ChatCircle },
@@ -22,7 +24,14 @@ const navItems = [
 
 export function AppShell() {
   const { theme, toggleTheme } = useUIStore()
+  const { logout, user } = useAuthStore()
   const location = useLocation()
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login', { replace: true })
+  }
 
   return (
     <div className="h-full flex flex-col">
@@ -55,6 +64,15 @@ export function AppShell() {
           aria-label="Toggle theme"
         >
           {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+        </button>
+
+        <button
+          onClick={handleLogout}
+          className="flex items-center justify-center p-2 rounded-full text-text-dim hover:text-error transition-colors duration-200"
+          aria-label="Sign out"
+          title={user ? `Signed in as ${user.email}` : 'Sign out'}
+        >
+          <SignOut size={16} />
         </button>
       </nav>
 
