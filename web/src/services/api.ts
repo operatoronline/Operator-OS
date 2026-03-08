@@ -45,6 +45,12 @@ import type {
   RetentionPolicy,
   RateLimitStatus,
   DetailedHealth,
+  UpdateProfileRequest,
+  ChangePasswordRequest,
+  NotificationPreferences,
+  ApiKey,
+  CreateApiKeyRequest,
+  CreateApiKeyResponse,
 } from '../types/api'
 
 // ---------------------------------------------------------------------------
@@ -421,6 +427,31 @@ export const api = {
 
     refresh: (data: { provider: string; refresh_token: string }) =>
       post<void>('/oauth/refresh', data),
+  },
+
+  // -------------------------------------------------------------------------
+  // User (profile, password, notifications, API keys)
+  // -------------------------------------------------------------------------
+  user: {
+    profile: () => get<UserProfile>('/user/profile'),
+
+    updateProfile: (data: UpdateProfileRequest) =>
+      put<UserProfile>('/user/profile', data),
+
+    changePassword: (data: ChangePasswordRequest) =>
+      post<void>('/user/password', data),
+
+    notifications: () => get<NotificationPreferences>('/user/notifications'),
+
+    updateNotifications: (data: Partial<NotificationPreferences>) =>
+      put<NotificationPreferences>('/user/notifications', data),
+
+    apiKeys: () => get<ApiKey[]>('/user/api-keys'),
+
+    createApiKey: (data: CreateApiKeyRequest) =>
+      post<CreateApiKeyResponse>('/user/api-keys', data),
+
+    deleteApiKey: (id: string) => del<void>(`/user/api-keys/${id}`),
   },
 
   // -------------------------------------------------------------------------

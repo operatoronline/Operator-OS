@@ -426,6 +426,45 @@ export interface AuditCountResponse {
 }
 
 // ---------------------------------------------------------------------------
+// User Profile
+// ---------------------------------------------------------------------------
+
+export interface UpdateProfileRequest {
+  display_name?: string
+}
+
+export interface ChangePasswordRequest {
+  current_password: string
+  new_password: string
+}
+
+export interface NotificationPreferences {
+  email_billing: boolean
+  email_security: boolean
+  email_product: boolean
+  push_enabled: boolean
+}
+
+export interface ApiKey {
+  id: string
+  name: string
+  prefix: string
+  last_used_at: string
+  created_at: string
+  expires_at: string
+}
+
+export interface CreateApiKeyRequest {
+  name: string
+  expires_in_days?: number
+}
+
+export interface CreateApiKeyResponse {
+  key: ApiKey
+  secret: string
+}
+
+// ---------------------------------------------------------------------------
 // GDPR
 // ---------------------------------------------------------------------------
 

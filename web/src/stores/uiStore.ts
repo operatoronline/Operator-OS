@@ -9,17 +9,27 @@ type Theme = 'dark' | 'light'
 
 interface UIState {
   theme: Theme
+  followingSystem: boolean // Whether theme follows OS preference
   sidebarOpen: boolean     // Desktop: expanded (true) / collapsed (false). Mobile: overlay open/closed.
   toggleTheme: () => void
   setTheme: (theme: Theme) => void
+  followSystem: () => void
   toggleSidebar: () => void
   setSidebarOpen: (open: boolean) => void
 }
 
+const getInitialFollowSystem = (): boolean => {
+  return localStorage.getItem('os-theme-system') === 'true'
+}
+
+const getSystemTheme = (): Theme =>
+  window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+
 const getInitialTheme = (): Theme => {
+  if (getInitialFollowSystem()) return getSystemTheme()
   const stored = localStorage.getItem('os-theme')
   if (stored === 'light' || stored === 'dark') return stored
-  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+  return getSystemTheme()
 }
 
 const getInitialSidebar = (): boolean => {
@@ -56,18 +66,38 @@ export const useUIStore = create<UIState>((set) => {
   const initial = getInitialTheme()
   applyTheme(initial)
 
+  // Listen for OS theme changes when following system
+  const mql = window.matchMedia('(prefers-color-scheme: dark)')
+  mql.addEventListener('change', () => {
+    const state = useUIStore.getState()
+    if (state.followingSystem) {
+      const next = getSystemTheme()
+      applyTheme(next)
+      useUIStore.setState({ theme: next })
+    }
+  })
+
   return {
     theme: initial,
+    followingSystem: getInitialFollowSystem(),
     sidebarOpen: getInitialSidebar(),
     toggleTheme: () =>
       set((state) => {
         const next = state.theme === 'dark' ? 'light' : 'dark'
         applyTheme(next)
-        return { theme: next }
+        localStorage.setItem('os-theme-system', 'false')
+        return { theme: next, followingSystem: false }
       }),
     setTheme: (theme) => {
       applyTheme(theme)
-      set({ theme })
+      localStorage.setItem('os-theme-system', 'false')
+      set({ theme, followingSystem: false })
+    },
+    followSystem: () => {
+      const systemTheme = getSystemTheme()
+      applyTheme(systemTheme)
+      localStorage.setItem('os-theme-system', 'true')
+      set({ theme: systemTheme, followingSystem: true })
     },
     toggleSidebar: () =>
       set((state) => {
