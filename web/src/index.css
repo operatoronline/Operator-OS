@@ -160,10 +160,103 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--scrollthumb); border-radius: 2px; }
 
+/* ─── Glass morphism utilities ─── */
+/* Reusable glass treatment matching the legacy floating nav / input */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 4px 24px var(--glass-shadow), 0 0 0 0.5px var(--glass-inset) inset;
+  transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+.glass-subtle {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 2px 12px var(--glass-shadow);
+  transition: background 0.3s, border-color 0.3s;
+}
+
+/* ─── Form base styles ─── */
+/* Inputs, selects, textareas all inherit the token system */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="url"],
+input[type="number"],
+textarea,
+select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-2) var(--sp-3);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.3s ease;
+  -webkit-appearance: none;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px oklch(from var(--accent) l c h / 0.15);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-dim);
+}
+
+input:disabled,
+textarea:disabled,
+select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── Focus ring utility ─── */
+.focus-ring:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* ─── Animations ─── */
 @keyframes fadeSlide {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeSlideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes bounce {
@@ -171,6 +264,46 @@ body {
   40% { transform: scale(1); opacity: 1; }
 }
 
-.animate-fade-slide {
-  animation: fadeSlide 0.25s ease;
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 6px oklch(0.65 0.18 145 / 0.5); }
+  50% { box-shadow: 0 0 12px oklch(0.65 0.18 145 / 0.8); }
+}
+
+.animate-fade-slide { animation: fadeSlide 0.25s ease; }
+.animate-fade-slide-down { animation: fadeSlideDown 0.25s ease; }
+.animate-fade-in { animation: fadeIn 0.2s ease; }
+.animate-scale-in { animation: scaleIn 0.2s ease; }
+.animate-slide-left { animation: slideInLeft 0.25s ease; }
+.animate-slide-right { animation: slideInRight 0.25s ease; }
+
+/* ─── Theme transition ─── */
+/* Smoothly transition all token-driven properties on theme switch */
+*,
+*::before,
+*::after {
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+  transition-timing-function: ease;
+  transition-duration: 0s;
+}
+
+/* Enable transitions only during theme change (JS sets this class) */
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition-duration: 0.3s !important;
+}
+
+/* ─── Reduced motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─── Selection ─── */
+::selection {
+  background: oklch(from var(--accent) l c h / 0.3);
+  color: var(--text);
 }

@@ -28,15 +28,28 @@ const getInitialSidebar = (): boolean => {
   return true // default expanded on desktop
 }
 
+let transitionTimer: ReturnType<typeof setTimeout> | undefined
+
 const applyTheme = (theme: Theme) => {
   const root = document.documentElement
+
+  // Enable smooth theme transition
+  root.classList.add('theme-transitioning')
+  clearTimeout(transitionTimer)
+  transitionTimer = setTimeout(() => root.classList.remove('theme-transitioning'), 350)
+
   root.classList.remove('dark', 'light')
   root.classList.add(theme)
   localStorage.setItem('os-theme', theme)
+
+  // Update meta theme-color for mobile browser chrome
   const meta = document.querySelector('meta[name="theme-color"]')
   if (meta) {
     meta.setAttribute('content', theme === 'dark' ? 'oklch(0.13 0 0)' : 'oklch(0.96 0 0)')
   }
+
+  // Update color-scheme for native form controls
+  root.style.colorScheme = theme
 }
 
 export const useUIStore = create<UIState>((set) => {
