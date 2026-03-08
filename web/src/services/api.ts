@@ -161,6 +161,24 @@ async function request<T>(
   path: string,
   opts: RequestOptions = {},
 ): Promise<T> {
+  try {
+    return await _request<T>(method, path, opts)
+  } catch (err) {
+    // Network errors (fetch itself failed — no response)
+    if (err instanceof TypeError && !(err instanceof ApiRequestError)) {
+      import('../stores/toastStore').then(({ toast }) => {
+        toast.error('Network error', 'Unable to reach the server. Check your connection.')
+      })
+    }
+    throw err
+  }
+}
+
+async function _request<T>(
+  method: string,
+  path: string,
+  opts: RequestOptions = {},
+): Promise<T> {
   const { noAuth, params, body, ...fetchOpts } = opts
 
   // Build URL with query params
@@ -233,7 +251,19 @@ async function request<T>(
       error: 'request_failed',
       message: res.statusText,
     }))
-    throw new ApiRequestError(res.status, errBody as ApiError)
+    const err = new ApiRequestError(res.status, errBody as ApiError)
+    // Show toast for server errors (5xx) and rate limits (429)
+    // Client errors (4xx) are typically handled by calling code
+    if (res.status >= 500 || res.status === 429) {
+      import('../stores/toastStore').then(({ toast }) => {
+        if (res.status === 429) {
+          toast.warning('Rate limited', 'Too many requests — please slow down.')
+        } else {
+          toast.error('Server error', err.message || 'Something went wrong. Please try again.')
+        }
+      })
+    }
+    throw err
   }
 
   // 204 No Content

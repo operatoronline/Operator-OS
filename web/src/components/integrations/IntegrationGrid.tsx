@@ -6,6 +6,7 @@
 import { memo } from 'react'
 import { Plugs } from '@phosphor-icons/react'
 import { IntegrationCard } from './IntegrationCard'
+import { EmptyState } from '../shared/EmptyState'
 import type { IntegrationSummary, IntegrationStatus, UserIntegration } from '../../types/api'
 
 interface IntegrationGridProps {
@@ -43,17 +44,11 @@ export const IntegrationGrid = memo(function IntegrationGrid({
 
   if (integrations.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="w-14 h-14 rounded-2xl bg-[var(--surface-2)] flex items-center justify-center mb-4">
-          <Plugs size={28} weight="thin" className="text-[var(--text-dim)]" />
-        </div>
-        <h3 className="text-sm font-semibold text-[var(--text)] mb-1">
-          No integrations found
-        </h3>
-        <p className="text-xs text-[var(--text-dim)] max-w-[280px]">
-          Try adjusting your search or filter to find integrations.
-        </p>
-      </div>
+      <EmptyState
+        icon={Plugs}
+        title="No integrations found"
+        description="Try adjusting your search or filter to find integrations."
+      />
     )
   }
 

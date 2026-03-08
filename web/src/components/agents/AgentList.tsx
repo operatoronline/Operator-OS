@@ -6,6 +6,7 @@
 import { Robot, Plus, WarningCircle } from '@phosphor-icons/react'
 import { AgentCard } from './AgentCard'
 import { Button } from '../shared/Button'
+import { EmptyState } from '../shared/EmptyState'
 import type { Agent } from '../../types/api'
 
 interface AgentListProps {
@@ -66,19 +67,13 @@ export function AgentList({
   // ─── Empty state ───
   if (agents.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center px-4">
-        <div className="w-16 h-16 rounded-2xl bg-[var(--accent-subtle)] flex items-center justify-center mb-4">
-          <Robot size={32} weight="thin" className="text-[var(--accent-text)]" />
-        </div>
-        <h2 className="text-lg font-semibold text-[var(--text)] mb-1">No agents yet</h2>
-        <p className="text-sm text-[var(--text-secondary)] mb-6 max-w-xs">
-          Create your first agent to start conversations. Agents define the AI model,
-          personality, and tools available in a chat session.
-        </p>
-        <Button size="sm" icon={<Plus size={16} weight="bold" />} onClick={onCreate}>
-          Create Agent
-        </Button>
-      </div>
+      <EmptyState
+        icon={Robot}
+        title="No agents yet"
+        description="Create your first agent to start conversations. Agents define the AI model, personality, and tools available in a chat session."
+        action={{ label: 'Create Agent', onClick: onCreate, icon: Plus }}
+        className="h-full"
+      />
     )
   }
 

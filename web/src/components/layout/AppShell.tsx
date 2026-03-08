@@ -10,6 +10,8 @@ import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
 import { BottomTabs } from './BottomTabs'
 import { MobileSidebar } from './MobileSidebar'
+import { OfflineBanner } from '../shared/OfflineBanner'
+import { ToastContainer } from '../shared/ToastContainer'
 import { useUIStore } from '../../stores/uiStore'
 import { useFocusOnNavigate } from '../../hooks/useFocusOnNavigate'
 
@@ -39,6 +41,7 @@ export function AppShell() {
 
       {/* ─── Main area ─── */}
       <div className="flex-1 flex flex-col min-w-0 h-full">
+        <OfflineBanner />
         <TopBar />
 
         {/* ─── Page content ─── */}
@@ -54,6 +57,9 @@ export function AppShell() {
 
       {/* ─── Bottom tabs (mobile) ─── */}
       <BottomTabs />
+
+      {/* ─── Toast notifications ─── */}
+      <ToastContainer />
     </div>
   )
 }
