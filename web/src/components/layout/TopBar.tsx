@@ -36,20 +36,28 @@ export function TopBar() {
 
   const title = pageTitles[location.pathname] || 'Operator OS'
 
-  // Close menu on outside click
+  // Close menu on outside click or Escape key
   useEffect(() => {
     if (!menuOpen) return
-    const handler = (e: MouseEvent) => {
+    const handleClick = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false)
       }
     }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('mousedown', handleClick)
+      document.removeEventListener('keydown', handleKey)
+    }
   }, [menuOpen])
 
   return (
     <header
+      role="banner"
       className="flex items-center justify-between h-14 px-4 md:px-6 border-b border-border-subtle bg-surface/50 backdrop-blur-sm shrink-0 z-40"
       style={{ paddingTop: 'var(--safe-t)' }}
     >
@@ -57,8 +65,8 @@ export function TopBar() {
       <div className="flex items-center gap-3">
         {/* Mobile hamburger — toggles sidebar (handled via mobile overlay in future) */}
         <button
-          className="md:hidden flex items-center justify-center p-1.5 rounded-lg text-text-dim hover:text-text-secondary hover:bg-surface-2/50 transition-colors"
-          aria-label="Menu"
+          className="md:hidden flex items-center justify-center p-1.5 rounded-lg text-text-dim hover:text-text-secondary hover:bg-surface-2/50 transition-colors focus-ring"
+          aria-label="Open navigation menu"
           onClick={() => useUIStore.getState().toggleSidebar()}
         >
           <List size={20} />
@@ -75,7 +83,7 @@ export function TopBar() {
         {/* Theme toggle */}
         <button
           onClick={toggleTheme}
-          className="flex items-center justify-center w-9 h-9 rounded-lg text-text-dim hover:text-text-secondary hover:bg-surface-2/50 transition-colors duration-150"
+          className="flex items-center justify-center w-9 h-9 rounded-lg text-text-dim hover:text-text-secondary hover:bg-surface-2/50 transition-colors duration-150 focus-ring"
           aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
         >
           {isDark ? <Sun size={18} /> : <Moon size={18} />}
@@ -85,9 +93,10 @@ export function TopBar() {
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-text-dim hover:text-text-secondary hover:bg-surface-2/50 transition-colors duration-150"
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-text-dim hover:text-text-secondary hover:bg-surface-2/50 transition-colors duration-150 focus-ring"
             aria-label="User menu"
             aria-expanded={menuOpen}
+            aria-haspopup="true"
           >
             <div className="w-7 h-7 rounded-full bg-accent-subtle flex items-center justify-center">
               <User size={14} weight="bold" className="text-accent-text" />
@@ -105,7 +114,11 @@ export function TopBar() {
 
           {/* Dropdown */}
           {menuOpen && (
-            <div className="absolute right-0 top-full mt-1.5 w-56 bg-surface border border-border rounded-xl shadow-[0_8px_32px_var(--glass-shadow)] overflow-hidden animate-fade-slide z-50">
+            <div
+              role="menu"
+              aria-label="User actions"
+              className="absolute right-0 top-full mt-1.5 w-56 bg-surface border border-border rounded-xl shadow-[0_8px_32px_var(--glass-shadow)] overflow-hidden animate-fade-slide z-50"
+            >
               {/* User info */}
               {user && (
                 <div className="px-4 py-3 border-b border-border-subtle">
@@ -121,13 +134,14 @@ export function TopBar() {
               {/* Actions */}
               <div className="py-1.5">
                 <button
+                  role="menuitem"
                   onClick={() => {
                     setMenuOpen(false)
                     logout()
                   }}
-                  className="flex items-center gap-3 w-full px-4 py-2.5 text-[13px] font-medium text-text-dim hover:text-error hover:bg-error-subtle/50 transition-colors duration-150"
+                  className="flex items-center gap-3 w-full px-4 py-2.5 text-[13px] font-medium text-text-dim hover:text-error hover:bg-error-subtle/50 transition-colors duration-150 focus-ring"
                 >
-                  <SignOut size={16} />
+                  <SignOut size={16} aria-hidden="true" />
                   Sign out
                 </button>
               </div>

@@ -4,7 +4,7 @@
 // button, timestamp grouping, and the typing indicator.
 // ============================================================================
 
-import { useRef, useEffect, useCallback, useState } from 'react'
+import { useRef, useEffect, useCallback, useState, useMemo } from 'react'
 import type { ChatMessage } from '../../stores/chatStore'
 import { MessageBubble } from './MessageBubble'
 import { TypingIndicator } from './TypingIndicator'
@@ -106,6 +106,14 @@ export function MessageList({ messages, isTyping, loading = false, streamingMess
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Screen reader announcement for new messages
+  const lastMessage = messages[messages.length - 1]
+  const lastNonStreamingMsg = useMemo(() => {
+    if (!lastMessage || lastMessage.streaming) return null
+    const prefix = lastMessage.role === 'user' ? 'You' : 'Agent'
+    return `${prefix}: ${lastMessage.content.slice(0, 200)}`
+  }, [lastMessage?.id, lastMessage?.streaming]) // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <div className="relative flex-1 min-h-0">
       {/* ─── Scrollable message area ─── */}
@@ -131,13 +139,15 @@ export function MessageList({ messages, isTyping, loading = false, streamingMess
           )}
 
           {/* Messages */}
-          {messages.map((msg, i) => (
-            <MessageBubble
-              key={msg.id}
-              message={msg}
-              showTimestamp={shouldShowTimestamp(msg, messages[i - 1])}
-            />
-          ))}
+          <div role="list" aria-label="Chat messages">
+            {messages.map((msg, i) => (
+              <MessageBubble
+                key={msg.id}
+                message={msg}
+                showTimestamp={shouldShowTimestamp(msg, messages[i - 1])}
+              />
+            ))}
+          </div>
 
           {/* Typing indicator */}
           {isTyping && !messages.some((m) => m.streaming) && <TypingIndicator />}
@@ -156,6 +166,15 @@ export function MessageList({ messages, isTyping, loading = false, streamingMess
         onClick={() => scrollToBottom()}
         unreadCount={unreadCount}
       />
+
+      {/* ─── Screen reader live region for new messages ─── */}
+      <div
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {lastNonStreamingMsg}
+      </div>
     </div>
   )
 }

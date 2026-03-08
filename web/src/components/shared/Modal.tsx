@@ -5,6 +5,7 @@
 
 import { useEffect, useRef, type ReactNode } from 'react'
 import { X } from '@phosphor-icons/react'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface ModalProps {
   open: boolean
@@ -18,6 +19,9 @@ interface ModalProps {
 export function Modal({ open, onClose, title, children, maxWidth = 'max-w-lg' }: ModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
+
+  // True focus trap: Tab cycles within the modal, restores focus on close
+  useFocusTrap(panelRef, open)
 
   // Close on Escape
   useEffect(() => {
@@ -36,11 +40,6 @@ export function Modal({ open, onClose, title, children, maxWidth = 'max-w-lg' }:
     return () => {
       document.body.style.overflow = ''
     }
-  }, [open])
-
-  // Focus panel on open
-  useEffect(() => {
-    if (open) panelRef.current?.focus()
   }, [open])
 
   if (!open) return null

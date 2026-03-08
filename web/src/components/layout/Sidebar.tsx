@@ -30,6 +30,7 @@ export function Sidebar() {
 
   return (
     <aside
+      aria-label="Sidebar navigation"
       className={`hidden md:flex flex-col shrink-0 h-full bg-surface border-r border-border transition-[width] duration-200 ease-out ${
         sidebarOpen ? 'w-52' : 'w-16'
       }`}
@@ -54,8 +55,9 @@ export function Sidebar() {
             <NavLink
               key={item.to}
               to={item.to}
+              aria-label={!sidebarOpen ? item.label : undefined}
               className={({ isActive }) =>
-                `group flex items-center gap-3 rounded-lg transition-all duration-150 select-none relative ${
+                `group flex items-center gap-3 rounded-lg transition-all duration-150 select-none relative focus-ring ${
                   sidebarOpen ? 'px-3 py-2.5' : 'px-0 py-2.5 justify-center'
                 } ${
                   isActive

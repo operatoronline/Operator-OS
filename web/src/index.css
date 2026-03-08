@@ -44,7 +44,7 @@
   --border-subtle: oklch(0.18 0 0);
   --text: oklch(0.92 0 0);
   --text-secondary: oklch(0.65 0 0);
-  --text-dim: oklch(0.45 0 0);
+  --text-dim: oklch(0.50 0 0);
   --accent: oklch(0.58 0.14 260);
   --accent-subtle: oklch(0.22 0.05 260);
   --accent-text: oklch(0.75 0.12 260);
@@ -276,6 +276,47 @@ select:disabled {
 
 /* ─── Focus ring utility ─── */
 .focus-ring:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ─── Screen reader only utility ─── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Override sr-only when focused (for skip links) */
+.sr-only:focus,
+.sr-only:focus-within {
+  /* Allow un-hiding on focus via Tailwind's not-sr-only or explicit override */
+}
+
+/* ─── High contrast mode support ─── */
+@media (forced-colors: active) {
+  .glass,
+  .glass-subtle {
+    border: 2px solid ButtonText;
+  }
+
+  button,
+  [role="button"] {
+    border: 1px solid ButtonText;
+  }
+}
+
+/* ─── Focus visible for all interactive elements ─── */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }

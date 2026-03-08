@@ -11,11 +11,15 @@ import { TopBar } from './TopBar'
 import { BottomTabs } from './BottomTabs'
 import { MobileSidebar } from './MobileSidebar'
 import { useUIStore } from '../../stores/uiStore'
+import { useFocusOnNavigate } from '../../hooks/useFocusOnNavigate'
 
 export function AppShell() {
   const sidebarOpen = useUIStore((s) => s.sidebarOpen)
   const setSidebarOpen = useUIStore((s) => s.setSidebarOpen)
   const location = useLocation()
+
+  // Focus management on route changes (WCAG 2.1)
+  useFocusOnNavigate()
 
   // Close mobile sidebar on route change
   useEffect(() => {
@@ -39,7 +43,11 @@ export function AppShell() {
 
         {/* ─── Page content ─── */}
         {/* pb on mobile to clear fixed BottomTabs */}
-        <main className="flex-1 relative overflow-hidden pb-[var(--bottom-tabs-h)] md:pb-0">
+        <main
+          id="main-content"
+          className="flex-1 relative overflow-hidden pb-[var(--bottom-tabs-h)] md:pb-0"
+          aria-label="Page content"
+        >
           <Outlet />
         </main>
       </div>

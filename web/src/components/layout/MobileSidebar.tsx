@@ -3,7 +3,7 @@
 // Slide-over navigation panel for mobile devices with backdrop.
 // ============================================================================
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { NavLink } from 'react-router-dom'
 import {
   ChatCircle,
@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   X,
 } from '@phosphor-icons/react'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 const navItems = [
   { to: '/chat', label: 'Chat', icon: ChatCircle },
@@ -30,6 +31,11 @@ interface MobileSidebarProps {
 }
 
 export function MobileSidebar({ open, onClose }: MobileSidebarProps) {
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  // Focus trap: Tab cycles within the mobile sidebar when open
+  useFocusTrap(panelRef, open)
+
   // Lock body scroll when open
   useEffect(() => {
     if (open) {
@@ -63,6 +69,7 @@ export function MobileSidebar({ open, onClose }: MobileSidebarProps) {
 
       {/* Panel */}
       <div
+        ref={panelRef}
         className={`md:hidden fixed top-0 left-0 bottom-0 z-100 w-64 bg-surface border-r border-border shadow-[4px_0_24px_var(--glass-shadow)] transition-transform duration-200 ease-out ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
@@ -100,7 +107,7 @@ export function MobileSidebar({ open, onClose }: MobileSidebarProps) {
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-3 rounded-lg text-[14px] font-medium
                    min-h-[44px] select-none active:scale-[0.98] active:opacity-80
-                   transition-all duration-150 ${
+                   transition-all duration-150 focus-ring ${
                     isActive
                       ? 'bg-surface-2 text-text shadow-[inset_0_0_0_1px_var(--border)]'
                       : 'text-text-dim hover:text-text-secondary hover:bg-surface-2/50'

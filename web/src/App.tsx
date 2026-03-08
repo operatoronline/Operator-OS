@@ -2,6 +2,8 @@ import { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AppShell } from './components/layout/AppShell'
 import { ProtectedRoute } from './components/shared/ProtectedRoute'
+import { SkipToContent } from './components/shared/SkipToContent'
+import { RouteAnnouncer } from './components/shared/RouteAnnouncer'
 import { ChatPage } from './pages/Chat'
 import { AgentsPage } from './pages/Agents'
 import { IntegrationsPage } from './pages/Integrations'
@@ -23,6 +25,9 @@ export default function App() {
   }, [initialize])
 
   return (
+    <>
+    <SkipToContent />
+    <RouteAnnouncer />
     <Routes>
       {/* ─── Public routes ─── */}
       <Route path="/login" element={<LoginPage />} />
@@ -49,5 +54,6 @@ export default function App() {
       {/* ─── Fallback ─── */}
       <Route path="*" element={<Navigate to="/chat" replace />} />
     </Routes>
+    </>
   )
 }
