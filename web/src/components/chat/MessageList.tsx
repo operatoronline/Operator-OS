@@ -15,6 +15,8 @@ interface MessageListProps {
   isTyping: boolean
   /** Set true while loading history */
   loading?: boolean
+  /** ID of the currently streaming message (for auto-scroll during streaming) */
+  streamingMessageId?: string | null
 }
 
 // Show timestamp if messages are >2 minutes apart or from different roles
@@ -30,7 +32,7 @@ function shouldShowTimestamp(
   return gap > 2 * 60 * 1000 // 2 minutes
 }
 
-export function MessageList({ messages, isTyping, loading = false }: MessageListProps) {
+export function MessageList({ messages, isTyping, loading = false, streamingMessageId }: MessageListProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const [isAtBottom, setIsAtBottom] = useState(true)
@@ -81,6 +83,20 @@ export function MessageList({ messages, isTyping, loading = false }: MessageList
       scrollToBottom()
     }
   }, [isTyping, isAtBottom, scrollToBottom])
+
+  // ── Auto-scroll during streaming content growth ──
+  // Track content length of streaming message to scroll as tokens arrive
+  const streamingContent = streamingMessageId
+    ? messages.find((m) => m.id === streamingMessageId)?.content
+    : undefined
+
+  useEffect(() => {
+    if (streamingContent !== undefined && isAtBottom) {
+      // Use instant scroll for streaming to avoid jitter from queued smooth scrolls
+      bottomRef.current?.scrollIntoView({ behavior: 'instant', block: 'end' })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [streamingContent?.length])
 
   // ── Initial scroll to bottom ──
   useEffect(() => {

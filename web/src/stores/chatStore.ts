@@ -22,6 +22,8 @@ export interface ChatMessage {
   createdAt: string
   /** true while the message is still streaming */
   streaming?: boolean
+  /** true if generation was cancelled by user */
+  cancelled?: boolean
 }
 
 interface ChatState {
@@ -32,6 +34,10 @@ interface ChatState {
   // Messages
   messages: ChatMessage[]
   isTyping: boolean
+
+  // Streaming
+  /** ID of the message currently being streamed (null if none) */
+  streamingMessageId: string | null
 
   // Active session/agent
   activeSessionId: string | null
@@ -45,6 +51,9 @@ interface ChatState {
   setActiveSession: (sessionId: string | null) => void
   setActiveAgent: (agentId: string | null) => void
   clearMessages: () => void
+
+  // Computed helpers
+  isStreaming: () => boolean
 }
 
 // ---------------------------------------------------------------------------
@@ -92,9 +101,10 @@ export const useChatStore = create<ChatState>((set, get) => {
                 : m,
             ),
             isTyping: false,
+            streamingMessageId: null,
           })
         } else {
-          // New message
+          // New message (non-streaming complete message)
           const newMsg: ChatMessage = {
             id: msg.payload.message_id,
             role: msg.payload.role,
@@ -108,6 +118,7 @@ export const useChatStore = create<ChatState>((set, get) => {
           set({
             messages: [...messages, newMsg],
             isTyping: false,
+            streamingMessageId: null,
           })
         }
       }),
@@ -117,34 +128,34 @@ export const useChatStore = create<ChatState>((set, get) => {
     cleanupFns.push(
       wsManager.on('message.update', (msg) => {
         const { messages } = get()
-        const existing = messages.find((m) => m.id === msg.payload.message_id)
+        const msgId = msg.payload.message_id
+        const isDone = !!msg.payload.done
+        const existing = messages.find((m) => m.id === msgId)
 
         if (existing) {
           set({
             messages: messages.map((m) =>
-              m.id === msg.payload.message_id
-                ? {
-                    ...m,
-                    content: msg.payload.content,
-                    streaming: !msg.payload.done,
-                  }
+              m.id === msgId
+                ? { ...m, content: msg.payload.content, streaming: !isDone }
                 : m,
             ),
-            isTyping: !msg.payload.done,
+            isTyping: !isDone,
+            streamingMessageId: isDone ? null : msgId,
           })
         } else {
           // First streaming chunk — create a new message entry
           const newMsg: ChatMessage = {
-            id: msg.payload.message_id,
+            id: msgId,
             role: 'agent',
             content: msg.payload.content,
             sessionId: msg.payload.session_id,
             createdAt: new Date().toISOString(),
-            streaming: !msg.payload.done,
+            streaming: !isDone,
           }
           set({
             messages: [...messages, newMsg],
-            isTyping: !msg.payload.done,
+            isTyping: !isDone,
+            streamingMessageId: isDone ? null : msgId,
           })
         }
       }),
@@ -193,6 +204,7 @@ export const useChatStore = create<ChatState>((set, get) => {
     reconnectVisible: false,
     messages: [],
     isTyping: false,
+    streamingMessageId: null,
     activeSessionId: null,
     activeAgentId: null,
 
@@ -217,6 +229,7 @@ export const useChatStore = create<ChatState>((set, get) => {
         connectionState: 'disconnected',
         reconnectVisible: false,
         isTyping: false,
+        streamingMessageId: null,
       })
     },
 
@@ -269,15 +282,35 @@ export const useChatStore = create<ChatState>((set, get) => {
     // Cancel generation
     // -------------------------------------------------------------------
     cancelGeneration: () => {
-      wsManager.send({ type: 'message.cancel', payload: {} })
-      set({ isTyping: false })
+      const { streamingMessageId, messages } = get()
+
+      // Send cancel to server
+      wsManager.send({
+        type: 'message.cancel',
+        payload: { message_id: streamingMessageId || undefined },
+      })
+
+      // Finalize any streaming message locally
+      if (streamingMessageId) {
+        set({
+          messages: messages.map((m) =>
+            m.id === streamingMessageId
+              ? { ...m, streaming: false, cancelled: true }
+              : m,
+          ),
+          isTyping: false,
+          streamingMessageId: null,
+        })
+      } else {
+        set({ isTyping: false, streamingMessageId: null })
+      }
     },
 
     // -------------------------------------------------------------------
     // Session / agent selection
     // -------------------------------------------------------------------
     setActiveSession: (sessionId) => {
-      set({ activeSessionId: sessionId, messages: [], isTyping: false })
+      set({ activeSessionId: sessionId, messages: [], isTyping: false, streamingMessageId: null })
     },
 
     setActiveAgent: (agentId) => {
@@ -288,7 +321,14 @@ export const useChatStore = create<ChatState>((set, get) => {
     // Clear messages
     // -------------------------------------------------------------------
     clearMessages: () => {
-      set({ messages: [], isTyping: false })
+      set({ messages: [], isTyping: false, streamingMessageId: null })
+    },
+
+    // -------------------------------------------------------------------
+    // Computed helpers
+    // -------------------------------------------------------------------
+    isStreaming: () => {
+      return get().streamingMessageId !== null
     },
   }
 })

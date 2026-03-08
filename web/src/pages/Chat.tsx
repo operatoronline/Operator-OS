@@ -3,7 +3,7 @@
 // Main chat interface with message thread, connection state, and composer stub.
 // ============================================================================
 
-import { ChatCircle, ArrowsClockwise, WifiSlash } from '@phosphor-icons/react'
+import { ChatCircle, ArrowsClockwise, WifiSlash, Stop } from '@phosphor-icons/react'
 import { useWebSocket } from '../hooks/useWebSocket'
 import { useChatStore } from '../stores/chatStore'
 import { ConnectionStatus } from '../components/chat/ConnectionStatus'
@@ -18,6 +18,8 @@ export function ChatPage() {
   const connect = useChatStore((s) => s.connect)
   const messages = useChatStore((s) => s.messages)
   const isTyping = useChatStore((s) => s.isTyping)
+  const streamingMessageId = useChatStore((s) => s.streamingMessageId)
+  const cancelGeneration = useChatStore((s) => s.cancelGeneration)
 
   return (
     <div className="h-full flex flex-col">
@@ -63,10 +65,32 @@ export function ChatPage() {
         </div>
       ) : (
         /* ─── Message thread ─── */
-        <MessageList messages={messages} isTyping={isTyping} />
+        <MessageList
+          messages={messages}
+          isTyping={isTyping}
+          streamingMessageId={streamingMessageId}
+        />
       )}
 
-      {/* ─── Composer placeholder (C10) — minimal input for testing ─── */}
+      {/* ─── Stop generating overlay ─── */}
+      {streamingMessageId && (
+        <div className="flex justify-center pb-2 shrink-0">
+          <button
+            onClick={cancelGeneration}
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded-full
+              bg-[var(--surface-2)] border border-[var(--border)]
+              text-xs text-[var(--text-secondary)] font-medium
+              hover:bg-[var(--surface-3)] hover:text-[var(--text)] hover:border-[var(--border-subtle)]
+              active:scale-95 transition-all duration-150 cursor-pointer
+              animate-fade-slide"
+          >
+            <Stop size={14} weight="fill" />
+            Stop generating
+          </button>
+        </div>
+      )}
+
+      {/* ─── Composer (C10 will upgrade to full composer with file upload) ─── */}
       <div className="border-t border-[var(--border-subtle)] bg-[var(--surface)] p-3 shrink-0">
         <ComposerStub />
       </div>
@@ -75,14 +99,13 @@ export function ChatPage() {
 }
 
 // ---------------------------------------------------------------------------
-// Minimal composer for testing WebSocket transport (replaced in C10)
+// Minimal composer for testing (replaced in C10 with full Composer component)
 // ---------------------------------------------------------------------------
 
 function ComposerStub() {
   const sendMessage = useChatStore((s) => s.sendMessage)
   const connectionState = useChatStore((s) => s.connectionState)
-  const isTyping = useChatStore((s) => s.isTyping)
-  const cancelGeneration = useChatStore((s) => s.cancelGeneration)
+  const streamingMessageId = useChatStore((s) => s.streamingMessageId)
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -101,26 +124,21 @@ function ComposerStub() {
     }
   }
 
-  const disabled = connectionState !== 'connected'
+  const disabled = connectionState !== 'connected' || !!streamingMessageId
 
   return (
     <div className="max-w-3xl mx-auto w-full">
-      {isTyping && (
-        <div className="flex items-center gap-1.5 px-2 pb-2 text-xs text-[var(--text-dim)]">
-          <span>Agent is responding…</span>
-          <button
-            onClick={cancelGeneration}
-            className="ml-auto text-[var(--error)] hover:underline cursor-pointer"
-          >
-            Cancel
-          </button>
-        </div>
-      )}
       <form onSubmit={handleSubmit} className="flex items-end gap-2">
         <textarea
           name="message"
           rows={1}
-          placeholder={disabled ? 'Connecting…' : 'Message Operator OS…'}
+          placeholder={
+            streamingMessageId
+              ? 'Waiting for response…'
+              : disabled
+                ? 'Connecting…'
+                : 'Message Operator OS…'
+          }
           disabled={disabled}
           onKeyDown={handleKeyDown}
           className="flex-1 resize-none bg-[var(--surface-2)] text-[var(--text)] text-sm rounded-xl px-4 py-2.5 border border-[var(--border-subtle)] focus:border-[var(--accent)] focus:outline-none placeholder:text-[var(--text-dim)] disabled:opacity-50 transition-colors"

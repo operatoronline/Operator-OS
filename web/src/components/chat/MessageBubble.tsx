@@ -25,7 +25,7 @@ function formatTime(iso: string): string {
 }
 
 function MessageBubbleInner({ message, showTimestamp = false }: MessageBubbleProps) {
-  const { role, content, streaming } = message
+  const { role, content, streaming, cancelled } = message
 
   // ── System message ──
   if (role === 'system') {
@@ -71,11 +71,14 @@ function MessageBubbleInner({ message, showTimestamp = false }: MessageBubblePro
           <span className="inline-block w-[2px] h-[1em] bg-[var(--accent)] ml-0.5 align-middle animate-blink" />
         )}
       </div>
-      {showTimestamp && !streaming && (
+      {(showTimestamp || cancelled) && !streaming && (
         <span className="text-[10px] text-[var(--text-dim)] mt-1 ml-1">
-          {formatTime(message.createdAt)}
-          {message.model && (
+          {showTimestamp && formatTime(message.createdAt)}
+          {message.model && showTimestamp && (
             <span className="ml-1.5 text-[var(--text-dim)]">· {message.model}</span>
+          )}
+          {cancelled && (
+            <span className="ml-1.5 text-[var(--warning)] italic">· stopped</span>
           )}
         </span>
       )}
