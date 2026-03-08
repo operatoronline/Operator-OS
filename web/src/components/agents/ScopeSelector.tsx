@@ -3,7 +3,7 @@
 // Per-agent visual editor for allowed integrations, tools, and OAuth scopes.
 // ============================================================================
 
-import { useState, useEffect, useCallback, memo } from 'react'
+import { useState, useCallback, memo } from 'react'
 import {
   Plugs,
   CaretDown,
@@ -295,7 +295,7 @@ const IntegrationRow = memo(function IntegrationRow({
   onToggle,
   onExpand,
   onToggleTool,
-  onToggleScope,
+  onToggleScope: _onToggleScope,
   onToggleAllTools,
 }: IntegrationRowProps) {
   const hasTools = integration.tools && integration.tools.length > 0
@@ -340,7 +340,7 @@ const IntegrationRow = memo(function IntegrationRow({
               <ShieldCheck
                 size={14}
                 className="text-[var(--text-dim)] shrink-0"
-                title="OAuth 2.0"
+                aria-label="OAuth 2.0"
               />
             )}
           </div>

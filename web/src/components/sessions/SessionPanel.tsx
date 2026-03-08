@@ -58,7 +58,7 @@ export function SessionPanel({ open = true, onClose, mobile = false }: SessionPa
   const [agentFilter, setAgentFilter] = useState<string>('')
   const [dateFrom, setDateFrom] = useState<string>('')
   const [dateTo, setDateTo] = useState<string>('')
-  const [exportingId, setExportingId] = useState<string | null>(null)
+  const [_exportingId, setExportingId] = useState<string | null>(null)
 
   const hasActiveFilters = !!agentFilter || !!dateFrom || !!dateTo
 
