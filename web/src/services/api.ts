@@ -51,6 +51,7 @@ import type {
   ApiKey,
   CreateApiKeyRequest,
   CreateApiKeyResponse,
+  SecurityAuditReport,
 } from '../types/api'
 
 // ---------------------------------------------------------------------------
@@ -478,6 +479,9 @@ export const api = {
       post<void>(`/admin/users/${id}/role`, data),
 
     stats: () => get<PlatformStats>('/admin/stats'),
+
+    securityAudit: (params?: { categories?: string }) =>
+      get<SecurityAuditReport>('/admin/security-audit', { params }),
   },
 
   // -------------------------------------------------------------------------

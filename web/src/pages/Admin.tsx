@@ -6,6 +6,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import {
   ShieldCheck,
+  ShieldWarning,
   MagnifyingGlass,
   ArrowCounterClockwise,
   CaretLeft,
@@ -18,6 +19,7 @@ import { useAdminStore } from '../stores/adminStore'
 import { StatsCards } from '../components/admin/StatsCards'
 import { UserTable } from '../components/admin/UserTable'
 import { AuditLog } from '../components/admin/AuditLog'
+import { SecurityDashboard } from '../components/admin/SecurityDashboard'
 import { ConfirmDialog } from '../components/shared/ConfirmDialog'
 import { Button } from '../components/shared/Button'
 
@@ -25,7 +27,7 @@ import { Button } from '../components/shared/Button'
 // Tab type
 // ---------------------------------------------------------------------------
 
-type AdminTab = 'users' | 'audit'
+type AdminTab = 'users' | 'audit' | 'security'
 
 // ---------------------------------------------------------------------------
 // Status filter options
@@ -176,6 +178,20 @@ export function AdminPage() {
               <ClockCounterClockwise size={14} />
               Audit Log
             </button>
+            <button
+              onClick={() => setActiveTab('security')}
+              className={`
+                inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium
+                transition-all duration-150 cursor-pointer
+                ${activeTab === 'security'
+                  ? 'bg-[var(--surface)] text-[var(--text)] shadow-sm'
+                  : 'text-[var(--text-dim)] hover:text-[var(--text-secondary)]'
+                }
+              `}
+            >
+              <ShieldWarning size={14} />
+              Security
+            </button>
           </div>
         </div>
 
@@ -262,7 +278,9 @@ export function AdminPage() {
 
       {/* ─── Tab content ─── */}
       <div className="flex-1 overflow-y-auto px-4 md:px-6 pb-4">
-        {activeTab === 'users' ? (
+        {activeTab === 'security' ? (
+          <SecurityDashboard />
+        ) : activeTab === 'users' ? (
           <>
             <UserTable
               users={store.users}

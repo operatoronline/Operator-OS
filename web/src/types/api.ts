@@ -505,6 +505,67 @@ export interface RateLimitStatus {
 }
 
 // ---------------------------------------------------------------------------
+// Security Audit
+// ---------------------------------------------------------------------------
+
+export type AuditSeverity = 'critical' | 'high' | 'medium' | 'low' | 'info'
+
+export type AuditCategory =
+  | 'authentication'
+  | 'authorization'
+  | 'input_validation'
+  | 'cryptography'
+  | 'session_management'
+  | 'api_security'
+  | 'configuration'
+  | 'data_protection'
+  | 'rate_limiting'
+  | 'security_headers'
+  | 'injection'
+  | 'compliance'
+
+export interface SecurityFinding {
+  id: string
+  category: AuditCategory
+  severity: AuditSeverity
+  title: string
+  description: string
+  location?: string
+  evidence?: string
+  remediation?: string
+  references?: string[]
+  passed: boolean
+}
+
+export interface SecuritySummary {
+  total: number
+  critical: number
+  high: number
+  medium: number
+  low: number
+  info: number
+  passed: number
+  failed: number
+}
+
+export interface CategoryStats {
+  total: number
+  passed: number
+  failed: number
+}
+
+export interface SecurityAuditReport {
+  timestamp: string
+  duration: number // nanoseconds
+  checks_run: number
+  findings: SecurityFinding[]
+  summary: SecuritySummary
+  risk_score: number   // 0-100, lower = better
+  pass_rate: number    // 0-100%
+  categories: Record<AuditCategory, CategoryStats>
+}
+
+// ---------------------------------------------------------------------------
 // Health
 // ---------------------------------------------------------------------------
 
