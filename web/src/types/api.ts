@@ -493,6 +493,44 @@ export interface DetailedHealth {
 }
 
 // ---------------------------------------------------------------------------
+// Sessions
+// ---------------------------------------------------------------------------
+
+export interface Session {
+  id: string
+  user_id: string
+  agent_id: string
+  name: string
+  created_at: string
+  updated_at: string
+  last_message_at: string
+  message_count: number
+  pinned: boolean
+  archived: boolean
+}
+
+export interface CreateSessionRequest {
+  agent_id?: string
+  name?: string
+}
+
+export interface UpdateSessionRequest {
+  name?: string
+  pinned?: boolean
+  archived?: boolean
+}
+
+export interface SessionMessage {
+  id: string
+  session_id: string
+  role: 'user' | 'agent' | 'system'
+  content: string
+  agent_id?: string
+  model?: string
+  created_at: string
+}
+
+// ---------------------------------------------------------------------------
 // Paginated list wrapper (common API pattern)
 // ---------------------------------------------------------------------------
 

@@ -6,6 +6,7 @@
 
 import { create } from 'zustand'
 import { wsManager } from '../services/ws'
+import { api, ApiRequestError } from '../services/api'
 import type { ConnectionState } from '../types/ws'
 
 // ---------------------------------------------------------------------------
@@ -43,12 +44,17 @@ interface ChatState {
   activeSessionId: string | null
   activeAgentId: string | null
 
+  // History loading
+  loadingHistory: boolean
+  historyError: string | null
+
   // Actions
   connect: () => void
   disconnect: () => void
   sendMessage: (content: string) => void
   cancelGeneration: () => void
   setActiveSession: (sessionId: string | null) => void
+  loadSessionHistory: (sessionId: string) => Promise<void>
   setActiveAgent: (agentId: string | null) => void
   clearMessages: () => void
 
@@ -207,6 +213,8 @@ export const useChatStore = create<ChatState>((set, get) => {
     streamingMessageId: null,
     activeSessionId: null,
     activeAgentId: null,
+    loadingHistory: false,
+    historyError: null,
 
     // -------------------------------------------------------------------
     // Connect
@@ -310,7 +318,42 @@ export const useChatStore = create<ChatState>((set, get) => {
     // Session / agent selection
     // -------------------------------------------------------------------
     setActiveSession: (sessionId) => {
-      set({ activeSessionId: sessionId, messages: [], isTyping: false, streamingMessageId: null })
+      set({ activeSessionId: sessionId, messages: [], isTyping: false, streamingMessageId: null, historyError: null })
+      // Load history for the selected session
+      if (sessionId) {
+        get().loadSessionHistory(sessionId)
+      }
+    },
+
+    // -------------------------------------------------------------------
+    // Load session message history
+    // -------------------------------------------------------------------
+    loadSessionHistory: async (sessionId: string) => {
+      set({ loadingHistory: true, historyError: null })
+      try {
+        const messages = await api.sessions.messages(sessionId, { per_page: 100 })
+        // Only apply if we're still on the same session
+        if (get().activeSessionId === sessionId) {
+          set({
+            messages: messages.map((m) => ({
+              id: m.id,
+              role: m.role,
+              content: m.content,
+              sessionId: m.session_id,
+              agentId: m.agent_id,
+              model: m.model,
+              createdAt: m.created_at,
+              streaming: false,
+            })),
+            loadingHistory: false,
+          })
+        }
+      } catch (err) {
+        if (get().activeSessionId === sessionId) {
+          const msg = err instanceof ApiRequestError ? err.message : 'Failed to load history'
+          set({ historyError: msg, loadingHistory: false })
+        }
+      }
     },
 
     setActiveAgent: (agentId) => {

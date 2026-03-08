@@ -13,6 +13,10 @@ import type {
   Agent,
   CreateAgentRequest,
   UpdateAgentRequest,
+  Session,
+  CreateSessionRequest,
+  UpdateSessionRequest,
+  SessionMessage,
   Plan,
   Subscription,
   CheckoutRequest,
@@ -273,6 +277,26 @@ export const api = {
     delete: (id: string) => del<void>(`/agents/${id}`),
 
     setDefault: (id: string) => post<void>(`/agents/${id}/default`),
+  },
+
+  // -------------------------------------------------------------------------
+  // Sessions
+  // -------------------------------------------------------------------------
+  sessions: {
+    list: (params?: { archived?: boolean; page?: number; per_page?: number }) =>
+      get<Session[]>('/sessions', { params }),
+
+    get: (id: string) => get<Session>(`/sessions/${id}`),
+
+    create: (data: CreateSessionRequest) => post<Session>('/sessions', data),
+
+    update: (id: string, data: UpdateSessionRequest) =>
+      put<Session>(`/sessions/${id}`, data),
+
+    delete: (id: string) => del<void>(`/sessions/${id}`),
+
+    messages: (id: string, params?: { page?: number; per_page?: number; before?: string }) =>
+      get<SessionMessage[]>(`/sessions/${id}/messages`, { params }),
   },
 
   // -------------------------------------------------------------------------

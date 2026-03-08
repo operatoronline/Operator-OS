@@ -17,7 +17,7 @@ cmd/**/workspace
 # Operator
 .operator/
 config.json
-sessions/
+/sessions/
 build/
 
 # Coverage
