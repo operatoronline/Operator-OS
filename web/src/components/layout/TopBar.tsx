@@ -1,0 +1,132 @@
+// ============================================================================
+// Operator OS — Top Bar
+// Persistent header with page title, theme toggle, and user menu.
+// ============================================================================
+
+import { useState, useRef, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
+import {
+  Sun,
+  Moon,
+  SignOut,
+  User,
+  List,
+  CaretDown,
+} from '@phosphor-icons/react'
+import { useUIStore } from '../../stores/uiStore'
+import { useAuthStore } from '../../stores/authStore'
+
+const pageTitles: Record<string, string> = {
+  '/chat': 'Chat',
+  '/agents': 'Agents',
+  '/integrations': 'Integrations',
+  '/billing': 'Billing',
+  '/settings': 'Settings',
+  '/admin': 'Admin',
+}
+
+export function TopBar() {
+  const { theme, toggleTheme } = useUIStore()
+  const { user, logout } = useAuthStore()
+  const location = useLocation()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  const title = pageTitles[location.pathname] || 'Operator OS'
+
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [menuOpen])
+
+  return (
+    <header className="flex items-center justify-between h-14 px-4 md:px-6 border-b border-border-subtle bg-surface/50 backdrop-blur-sm shrink-0 z-40">
+      {/* ─── Left: mobile menu + page title ─── */}
+      <div className="flex items-center gap-3">
+        {/* Mobile hamburger — toggles sidebar (handled via mobile overlay in future) */}
+        <button
+          className="md:hidden flex items-center justify-center p-1.5 rounded-lg text-text-dim hover:text-text-secondary hover:bg-surface-2/50 transition-colors"
+          aria-label="Menu"
+          onClick={() => useUIStore.getState().toggleSidebar()}
+        >
+          <List size={20} />
+        </button>
+
+        <h1 className="text-[15px] font-semibold text-text">{title}</h1>
+      </div>
+
+      {/* ─── Right: theme toggle + user menu ─── */}
+      <div className="flex items-center gap-1">
+        {/* Theme toggle */}
+        <button
+          onClick={toggleTheme}
+          className="flex items-center justify-center w-9 h-9 rounded-lg text-text-dim hover:text-text-secondary hover:bg-surface-2/50 transition-colors duration-150"
+          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        >
+          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+        </button>
+
+        {/* User menu */}
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-text-dim hover:text-text-secondary hover:bg-surface-2/50 transition-colors duration-150"
+            aria-label="User menu"
+            aria-expanded={menuOpen}
+          >
+            <div className="w-7 h-7 rounded-full bg-accent-subtle flex items-center justify-center">
+              <User size={14} weight="bold" className="text-accent-text" />
+            </div>
+            {user && (
+              <span className="hidden sm:block text-[13px] font-medium text-text max-w-[120px] truncate">
+                {user.display_name || user.email}
+              </span>
+            )}
+            <CaretDown
+              size={12}
+              className={`transition-transform duration-150 ${menuOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+
+          {/* Dropdown */}
+          {menuOpen && (
+            <div className="absolute right-0 top-full mt-1.5 w-56 bg-surface border border-border rounded-xl shadow-[0_8px_32px_var(--glass-shadow)] overflow-hidden animate-fade-slide z-50">
+              {/* User info */}
+              {user && (
+                <div className="px-4 py-3 border-b border-border-subtle">
+                  <p className="text-sm font-medium text-text truncate">
+                    {user.display_name || user.email}
+                  </p>
+                  <p className="text-xs text-text-dim truncate mt-0.5">
+                    {user.email}
+                  </p>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="py-1.5">
+                <button
+                  onClick={() => {
+                    setMenuOpen(false)
+                    logout()
+                  }}
+                  className="flex items-center gap-3 w-full px-4 py-2.5 text-[13px] font-medium text-text-dim hover:text-error hover:bg-error-subtle/50 transition-colors duration-150"
+                >
+                  <SignOut size={16} />
+                  Sign out
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </header>
+  )
+}

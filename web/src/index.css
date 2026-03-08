@@ -128,6 +128,11 @@
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
   --radius-lg: var(--radius);
+
+  /* Z-index scale for layered UI */
+  --z-nav: 80;
+  --z-backdrop: 90;
+  --z-overlay: 100;
 }
 
 /* ─── Base resets ─── */

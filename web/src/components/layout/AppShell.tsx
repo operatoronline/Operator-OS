@@ -1,107 +1,50 @@
-import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import {
-  ChatCircle,
-  Robot,
-  Plugs,
-  CreditCard,
-  Gear,
-  ShieldCheck,
-  Sun,
-  Moon,
-  SignOut,
-} from '@phosphor-icons/react'
-import { useUIStore } from '../../stores/uiStore'
-import { useAuthStore } from '../../stores/authStore'
+// ============================================================================
+// Operator OS — App Shell
+// Root layout: Sidebar (desktop) + TopBar + Content + BottomTabs (mobile).
+// Includes mobile slide-over sidebar with backdrop.
+// ============================================================================
 
-const navItems = [
-  { to: '/chat', label: 'Chat', icon: ChatCircle },
-  { to: '/agents', label: 'Agents', icon: Robot },
-  { to: '/integrations', label: 'Integrations', icon: Plugs },
-  { to: '/billing', label: 'Billing', icon: CreditCard },
-  { to: '/settings', label: 'Settings', icon: Gear },
-  { to: '/admin', label: 'Admin', icon: ShieldCheck },
-]
+import { useEffect } from 'react'
+import { Outlet, useLocation } from 'react-router-dom'
+import { Sidebar } from './Sidebar'
+import { TopBar } from './TopBar'
+import { BottomTabs } from './BottomTabs'
+import { MobileSidebar } from './MobileSidebar'
+import { useUIStore } from '../../stores/uiStore'
 
 export function AppShell() {
-  const { theme, toggleTheme } = useUIStore()
-  const { logout, user } = useAuthStore()
+  const sidebarOpen = useUIStore((s) => s.sidebarOpen)
+  const setSidebarOpen = useUIStore((s) => s.setSidebarOpen)
   const location = useLocation()
-  const navigate = useNavigate()
 
-  const handleLogout = () => {
-    logout()
-    navigate('/login', { replace: true })
-  }
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    // Only close on mobile (sidebar is repurposed as overlay on small screens)
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false)
+    }
+  }, [location.pathname, setSidebarOpen])
 
   return (
-    <div className="h-full flex flex-col">
-      {/* ─── Floating Nav (desktop) ─── */}
-      <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-80 hidden md:flex items-center gap-1 bg-glass-bg backdrop-blur-[20px] saturate-[1.4] border border-glass-border rounded-full px-1 py-1 shadow-[0_4px_24px_var(--glass-shadow)]">
-        {navItems.map((item) => {
-          const Icon = item.icon
-          const isActive = location.pathname.startsWith(item.to)
-          return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-medium transition-all duration-200 select-none whitespace-nowrap ${
-                isActive
-                  ? 'bg-surface-2 text-text shadow-[0_1px_4px_var(--glass-shadow)]'
-                  : 'text-text-dim hover:text-text-secondary'
-              }`}
-            >
-              <Icon size={16} weight={isActive ? 'fill' : 'regular'} />
-              {item.label}
-            </NavLink>
-          )
-        })}
+    <div className="h-full flex">
+      {/* ─── Desktop sidebar ─── */}
+      <Sidebar />
 
-        <div className="w-px h-5 bg-border mx-1 shrink-0" />
+      {/* ─── Mobile sidebar overlay ─── */}
+      <MobileSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        <button
-          onClick={toggleTheme}
-          className="flex items-center justify-center p-2 rounded-full text-text-dim hover:text-text-secondary transition-colors duration-200"
-          aria-label="Toggle theme"
-        >
-          {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-        </button>
+      {/* ─── Main area ─── */}
+      <div className="flex-1 flex flex-col min-w-0 h-full">
+        <TopBar />
 
-        <button
-          onClick={handleLogout}
-          className="flex items-center justify-center p-2 rounded-full text-text-dim hover:text-error transition-colors duration-200"
-          aria-label="Sign out"
-          title={user ? `Signed in as ${user.email}` : 'Sign out'}
-        >
-          <SignOut size={16} />
-        </button>
-      </nav>
-
-      {/* ─── Main content ─── */}
-      <main className="flex-1 relative overflow-hidden">
-        <Outlet />
-      </main>
+        {/* ─── Page content ─── */}
+        <main className="flex-1 relative overflow-hidden">
+          <Outlet />
+        </main>
+      </div>
 
       {/* ─── Bottom tabs (mobile) ─── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-80 bg-glass-bg backdrop-blur-[20px] saturate-[1.4] border-t border-glass-border pb-[var(--safe-b)]">
-        <div className="flex items-center justify-around px-2 py-2">
-          {navItems.slice(0, 5).map((item) => {
-            const Icon = item.icon
-            const isActive = location.pathname.startsWith(item.to)
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg text-[10px] font-medium transition-colors duration-200 ${
-                  isActive ? 'text-accent-text' : 'text-text-dim'
-                }`}
-              >
-                <Icon size={20} weight={isActive ? 'fill' : 'regular'} />
-                {item.label}
-              </NavLink>
-            )
-          })}
-        </div>
-      </nav>
+      <BottomTabs />
     </div>
   )
 }
