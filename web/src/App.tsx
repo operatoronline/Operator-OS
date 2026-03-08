@@ -11,6 +11,7 @@ import { AdminPage } from './pages/Admin'
 import { LoginPage } from './pages/Login'
 import { RegisterPage } from './pages/Register'
 import { VerifyPage } from './pages/Verify'
+import { OAuthCallbackPage } from './pages/OAuthCallback'
 import { useAuthStore } from './stores/authStore'
 
 export default function App() {
@@ -27,6 +28,7 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/verify" element={<VerifyPage />} />
+      <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
 
       {/* ─── Protected routes ─── */}
       <Route

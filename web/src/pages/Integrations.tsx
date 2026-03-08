@@ -15,9 +15,11 @@ import { useIntegrationStore } from '../stores/integrationStore'
 import { CategoryFilter } from '../components/integrations/CategoryFilter'
 import { IntegrationGrid } from '../components/integrations/IntegrationGrid'
 import { ApiKeyDialog } from '../components/integrations/ApiKeyDialog'
+import { OAuthFlow } from '../components/integrations/OAuthFlow'
 import { ConfirmDialog } from '../components/shared/ConfirmDialog'
 import { Button } from '../components/shared/Button'
 import type { IntegrationSummary } from '../types/api'
+import type { OAuthPopupResult } from '../utils/oauthPopup'
 
 type ViewFilter = 'all' | 'connected' | 'available'
 
@@ -25,6 +27,8 @@ export function IntegrationsPage() {
   const store = useIntegrationStore()
   const [viewFilter, setViewFilter] = useState<ViewFilter>('all')
   const [apiKeyTarget, setApiKeyTarget] = useState<IntegrationSummary | null>(null)
+  const [oauthTarget, setOauthTarget] = useState<IntegrationSummary | null>(null)
+  const [oauthReconnect, setOauthReconnect] = useState(false)
   const [disconnectTarget, setDisconnectTarget] = useState<string | null>(null)
 
   // Fetch on mount
@@ -37,8 +41,11 @@ export function IntegrationsPage() {
   const handleConnect = useCallback((integration: IntegrationSummary) => {
     if (integration.auth_type === 'api_key') {
       setApiKeyTarget(integration)
+    } else if (integration.auth_type === 'oauth2') {
+      setOauthTarget(integration)
+      setOauthReconnect(false)
     } else {
-      // OAuth or no-auth — direct connect
+      // No-auth — direct connect
       store.connect(integration.id)
     }
   }, [store])
@@ -63,7 +70,23 @@ export function IntegrationsPage() {
   }, [disconnectTarget, store])
 
   const handleReconnect = useCallback((integrationId: string) => {
-    store.reconnect(integrationId)
+    // For OAuth integrations, open the OAuth flow in reconnect mode
+    const integration = store.integrations.find((i) => i.id === integrationId)
+    if (integration?.auth_type === 'oauth2') {
+      setOauthTarget(integration)
+      setOauthReconnect(true)
+    } else {
+      store.reconnect(integrationId)
+    }
+  }, [store])
+
+  const handleOAuthComplete = useCallback((result: OAuthPopupResult) => {
+    if (result.success) {
+      // Refresh integration statuses after successful OAuth
+      store.fetchStatuses()
+    }
+    setOauthTarget(null)
+    setOauthReconnect(false)
   }, [store])
 
   // Category counts
@@ -228,6 +251,15 @@ export function IntegrationsPage() {
         onSubmit={handleApiKeySubmit}
         loading={!!store.loadingConnect}
         error={store.connectError}
+      />
+
+      {/* ─── OAuth Flow ─── */}
+      <OAuthFlow
+        open={!!oauthTarget}
+        onClose={() => { setOauthTarget(null); setOauthReconnect(false) }}
+        integration={oauthTarget}
+        onComplete={handleOAuthComplete}
+        reconnect={oauthReconnect}
       />
 
       {/* ─── Disconnect Confirmation ─── */}
