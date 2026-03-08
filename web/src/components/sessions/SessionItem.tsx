@@ -13,6 +13,11 @@ import {
   DotsThree,
   Check,
   X,
+  Archive,
+  ArrowUUpLeft,
+  Export,
+  FileText,
+  FileCode,
 } from '@phosphor-icons/react'
 
 interface SessionItemProps {
@@ -21,11 +26,15 @@ interface SessionItemProps {
   messageCount: number
   lastMessageAt: string
   pinned: boolean
+  archived?: boolean
   isActive: boolean
   isRenaming: boolean
   onSelect: (id: string) => void
   onRename: (id: string, name: string) => void
   onTogglePin: (id: string, pinned: boolean) => void
+  onToggleArchive: (id: string, archived: boolean) => void
+  onExportMarkdown: (id: string) => void
+  onExportJSON: (id: string) => void
   onDelete: (id: string) => void
   onStartRename: (id: string) => void
   onCancelRename: () => void
@@ -54,15 +63,20 @@ export const SessionItem = memo(function SessionItem({
   messageCount,
   lastMessageAt,
   pinned,
+  archived = false,
   isActive,
   isRenaming,
   onSelect,
   onRename,
   onTogglePin,
+  onToggleArchive,
+  onExportMarkdown,
+  onExportJSON,
   onDelete,
   onStartRename,
   onCancelRename,
 }: SessionItemProps) {
+  const [exportOpen, setExportOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [renameValue, setRenameValue] = useState(name)
   const renameRef = useRef<HTMLInputElement>(null)
@@ -226,7 +240,7 @@ export const SessionItem = memo(function SessionItem({
 
           {menuOpen && (
             <div
-              className="absolute right-0 top-full mt-1 w-40
+              className="absolute right-0 top-full mt-1 w-44
                 glass rounded-[var(--radius-md)] py-1 z-50
                 animate-fade-slide shadow-[0_4px_12px_var(--glass-shadow)]"
             >
@@ -254,6 +268,62 @@ export const SessionItem = memo(function SessionItem({
                 <PencilSimple size={14} />
                 Rename
               </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onToggleArchive(id, !archived)
+                  setMenuOpen(false)
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)]
+                  hover:text-[var(--text)] hover:bg-[var(--surface-2)]/60 transition-colors cursor-pointer"
+              >
+                {archived ? <ArrowUUpLeft size={14} /> : <Archive size={14} />}
+                {archived ? 'Unarchive' : 'Archive'}
+              </button>
+              {/* Export submenu */}
+              <div className="relative">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setExportOpen(!exportOpen)
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--text-secondary)]
+                    hover:text-[var(--text)] hover:bg-[var(--surface-2)]/60 transition-colors cursor-pointer"
+                >
+                  <Export size={14} />
+                  Export
+                </button>
+                {exportOpen && (
+                  <div className="pl-6">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onExportMarkdown(id)
+                        setMenuOpen(false)
+                        setExportOpen(false)
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-[var(--text-secondary)]
+                        hover:text-[var(--text)] hover:bg-[var(--surface-2)]/60 transition-colors cursor-pointer"
+                    >
+                      <FileText size={13} />
+                      Markdown
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onExportJSON(id)
+                        setMenuOpen(false)
+                        setExportOpen(false)
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-[var(--text-secondary)]
+                        hover:text-[var(--text)] hover:bg-[var(--surface-2)]/60 transition-colors cursor-pointer"
+                    >
+                      <FileCode size={13} />
+                      JSON
+                    </button>
+                  </div>
+                )}
+              </div>
               <div className="my-1 border-t border-[var(--border-subtle)]" />
               <button
                 onClick={(e) => {
