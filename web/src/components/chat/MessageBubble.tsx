@@ -2,12 +2,12 @@
 // Operator OS — MessageBubble
 // Renders a single chat message: user, agent, or system.
 // Ports visual treatment from legacy index.html (OKLCH tokens, border radii,
-// font sizing, spacing). Agent messages are plain text for now — markdown
-// rendering comes in C8.
+// font sizing, spacing). Agent messages render markdown via MarkdownRenderer.
 // ============================================================================
 
 import { memo } from 'react'
 import type { ChatMessage } from '../../stores/chatStore'
+import { MarkdownRenderer } from './MarkdownRenderer'
 
 interface MessageBubbleProps {
   message: ChatMessage
@@ -62,11 +62,11 @@ function MessageBubbleInner({ message, showTimestamp = false }: MessageBubblePro
   return (
     <div className="flex flex-col items-start animate-fade-slide">
       <div
-        className={`max-w-[680px] w-fit text-sm leading-[1.7] text-[var(--text)]
-          px-0 py-1 whitespace-pre-wrap break-words
+        className={`max-w-[680px] w-fit text-[var(--text)]
+          px-0 py-1
           ${streaming ? 'animate-pulse-glow rounded-lg px-2' : ''}`}
       >
-        {content}
+        <MarkdownRenderer content={content} streaming={streaming} />
         {streaming && (
           <span className="inline-block w-[2px] h-[1em] bg-[var(--accent)] ml-0.5 align-middle animate-blink" />
         )}

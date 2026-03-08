@@ -11,11 +11,16 @@
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
+    "@phosphor-icons/react": "^2.1.7",
+    "@types/dompurify": "^3.0.5",
+    "dompurify": "^3.3.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^7.3.0",
-    "zustand": "^5.0.3",
-    "@phosphor-icons/react": "^2.1.7"
+    "rehype-highlight": "^7.0.2",
+    "remark-gfm": "^4.0.1",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

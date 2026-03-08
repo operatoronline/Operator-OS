@@ -1,0 +1,119 @@
+/* ============================================================================
+   highlight.js theme — Operator OS
+   Token-aware syntax colors that adapt to dark/light theme via OKLCH vars.
+   ============================================================================ */
+
+/* Base */
+.hljs {
+  color: var(--text);
+  background: transparent;
+}
+
+/* Comments */
+.hljs-comment,
+.hljs-quote {
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+/* Keywords, selectors, tags */
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-type {
+  color: oklch(0.72 0.14 310);
+}
+.light .hljs-keyword,
+.light .hljs-selector-tag,
+.light .hljs-type {
+  color: oklch(0.50 0.18 310);
+}
+
+/* Strings, attributes */
+.hljs-string,
+.hljs-attr,
+.hljs-addition {
+  color: oklch(0.72 0.15 145);
+}
+.light .hljs-string,
+.light .hljs-attr,
+.light .hljs-addition {
+  color: oklch(0.45 0.16 145);
+}
+
+/* Numbers, literals */
+.hljs-number,
+.hljs-literal,
+.hljs-variable,
+.hljs-template-variable {
+  color: oklch(0.75 0.12 60);
+}
+.light .hljs-number,
+.light .hljs-literal,
+.light .hljs-variable,
+.light .hljs-template-variable {
+  color: oklch(0.50 0.14 60);
+}
+
+/* Functions, built-ins */
+.hljs-title,
+.hljs-built_in,
+.hljs-name {
+  color: oklch(0.75 0.12 260);
+}
+.light .hljs-title,
+.light .hljs-built_in,
+.light .hljs-name {
+  color: oklch(0.45 0.14 260);
+}
+
+/* Regex, symbols */
+.hljs-regexp,
+.hljs-symbol {
+  color: oklch(0.70 0.15 30);
+}
+.light .hljs-regexp,
+.light .hljs-symbol {
+  color: oklch(0.50 0.16 30);
+}
+
+/* Meta, preprocessor */
+.hljs-meta,
+.hljs-meta .hljs-keyword {
+  color: var(--text-secondary);
+}
+
+/* Deletion */
+.hljs-deletion {
+  color: var(--error);
+  background: var(--error-subtle);
+}
+
+/* Emphasis */
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: 600;
+}
+
+/* Section headings */
+.hljs-section {
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+/* Selector class/id */
+.hljs-selector-class,
+.hljs-selector-id {
+  color: oklch(0.72 0.14 200);
+}
+.light .hljs-selector-class,
+.light .hljs-selector-id {
+  color: oklch(0.45 0.16 200);
+}
+
+/* Params */
+.hljs-params {
+  color: var(--text-secondary);
+}
