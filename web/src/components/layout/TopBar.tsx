@@ -16,6 +16,7 @@ import {
 import { useTheme } from '../../hooks/useTheme'
 import { useAuthStore } from '../../stores/authStore'
 import { useUIStore } from '../../stores/uiStore'
+import { RateLimitIndicator } from '../shared/RateLimitIndicator'
 
 const pageTitles: Record<string, string> = {
   '/chat': 'Chat',
@@ -65,6 +66,9 @@ export function TopBar() {
 
       {/* ─── Right: theme toggle + user menu ─── */}
       <div className="flex items-center gap-1">
+        {/* Rate limit indicator */}
+        <RateLimitIndicator />
+
         {/* Theme toggle */}
         <button
           onClick={toggleTheme}

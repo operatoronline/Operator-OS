@@ -91,6 +91,24 @@ export class ApiRequestError extends Error {
 }
 
 // ---------------------------------------------------------------------------
+// Rate limit header extraction
+// ---------------------------------------------------------------------------
+
+/**
+ * Extract X-RateLimit-* headers and forward to the rate limit store.
+ * Uses lazy import to avoid circular dependency at module load time.
+ */
+function _extractRateLimitHeaders(headers: Headers) {
+  // Only process if rate limit headers are present
+  if (!headers.has('X-RateLimit-Limit')) return
+
+  // Lazy dynamic import avoids circular dep (store imports api)
+  import('../stores/rateLimitStore').then(({ useRateLimitStore }) => {
+    useRateLimitStore.getState().updateFromHeaders(headers)
+  })
+}
+
+// ---------------------------------------------------------------------------
 // Core fetch wrapper
 // ---------------------------------------------------------------------------
 
@@ -185,6 +203,7 @@ async function request<T>(
         body: body !== undefined ? JSON.stringify(body) : undefined,
       })
       if (retry.ok) {
+        _extractRateLimitHeaders(retry.headers)
         if (retry.status === 204) return undefined as T
         return retry.json() as Promise<T>
       }
@@ -197,6 +216,9 @@ async function request<T>(
     const errBody = await res.json().catch(() => ({ error: 'unauthorized' }))
     throw new ApiRequestError(401, errBody as ApiError)
   }
+
+  // Capture rate limit headers from every response
+  _extractRateLimitHeaders(res.headers)
 
   // Handle other errors
   if (!res.ok) {
