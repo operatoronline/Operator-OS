@@ -15,6 +15,7 @@ import {
   CaretRight,
 } from '@phosphor-icons/react'
 import { useUIStore } from '../../stores/uiStore'
+import { usePrefetch } from '../../hooks/usePrefetch'
 
 const navItems = [
   { to: '/chat', label: 'Chat', icon: ChatCircle },
@@ -24,6 +25,49 @@ const navItems = [
   { to: '/settings', label: 'Settings', icon: Gear },
   { to: '/admin', label: 'Admin', icon: ShieldCheck },
 ]
+
+// Separate component so usePrefetch hook can be called per-item
+function SidebarNavItem({ item, sidebarOpen }: { item: typeof navItems[number]; sidebarOpen: boolean }) {
+  const prefetchProps = usePrefetch(item.to)
+  const Icon = item.icon
+
+  return (
+    <NavLink
+      to={item.to}
+      aria-label={!sidebarOpen ? item.label : undefined}
+      {...prefetchProps}
+      className={({ isActive }) =>
+        `group flex items-center gap-3 rounded-lg transition-all duration-150 select-none relative focus-ring ${
+          sidebarOpen ? 'px-3 py-2.5' : 'px-0 py-2.5 justify-center'
+        } ${
+          isActive
+            ? 'bg-surface-2 text-text shadow-[inset_0_0_0_1px_var(--border)]'
+            : 'text-text-dim hover:text-text-secondary hover:bg-surface-2/50'
+        }`
+      }
+    >
+      {({ isActive }) => (
+        <>
+          <Icon
+            size={20}
+            weight={isActive ? 'fill' : 'regular'}
+            className="shrink-0"
+          />
+          {sidebarOpen && (
+            <span className="text-[13px] font-medium whitespace-nowrap overflow-hidden">
+              {item.label}
+            </span>
+          )}
+          {!sidebarOpen && (
+            <span className="absolute left-full ml-2 px-2 py-1 rounded-md bg-surface-3 text-text text-xs font-medium whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-150 z-50 shadow-[0_2px_8px_var(--glass-shadow)]">
+              {item.label}
+            </span>
+          )}
+        </>
+      )}
+    </NavLink>
+  )
+}
 
 export function Sidebar() {
   const { sidebarOpen, toggleSidebar } = useUIStore()
@@ -49,46 +93,9 @@ export function Sidebar() {
 
       {/* ─── Nav items ─── */}
       <nav className="flex-1 flex flex-col gap-0.5 px-2 py-3 overflow-y-auto">
-        {navItems.map((item) => {
-          const Icon = item.icon
-          return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              aria-label={!sidebarOpen ? item.label : undefined}
-              className={({ isActive }) =>
-                `group flex items-center gap-3 rounded-lg transition-all duration-150 select-none relative focus-ring ${
-                  sidebarOpen ? 'px-3 py-2.5' : 'px-0 py-2.5 justify-center'
-                } ${
-                  isActive
-                    ? 'bg-surface-2 text-text shadow-[inset_0_0_0_1px_var(--border)]'
-                    : 'text-text-dim hover:text-text-secondary hover:bg-surface-2/50'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <Icon
-                    size={20}
-                    weight={isActive ? 'fill' : 'regular'}
-                    className="shrink-0"
-                  />
-                  {sidebarOpen && (
-                    <span className="text-[13px] font-medium whitespace-nowrap overflow-hidden">
-                      {item.label}
-                    </span>
-                  )}
-                  {/* Tooltip for collapsed state */}
-                  {!sidebarOpen && (
-                    <span className="absolute left-full ml-2 px-2 py-1 rounded-md bg-surface-3 text-text text-xs font-medium whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-150 z-50 shadow-[0_2px_8px_var(--glass-shadow)]">
-                      {item.label}
-                    </span>
-                  )}
-                </>
-              )}
-            </NavLink>
-          )
-        })}
+        {navItems.map((item) => (
+          <SidebarNavItem key={item.to} item={item} sidebarOpen={sidebarOpen} />
+        ))}
       </nav>
 
       {/* ─── Collapse toggle ─── */}

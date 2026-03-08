@@ -1,20 +1,24 @@
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AppShell } from './components/layout/AppShell'
 import { ProtectedRoute } from './components/shared/ProtectedRoute'
 import { SkipToContent } from './components/shared/SkipToContent'
 import { RouteAnnouncer } from './components/shared/RouteAnnouncer'
-import { ChatPage } from './pages/Chat'
-import { AgentsPage } from './pages/Agents'
-import { IntegrationsPage } from './pages/Integrations'
-import { BillingPage } from './pages/Billing'
-import { SettingsPage } from './pages/Settings'
-import { AdminPage } from './pages/Admin'
-import { LoginPage } from './pages/Login'
-import { RegisterPage } from './pages/Register'
-import { VerifyPage } from './pages/Verify'
-import { OAuthCallbackPage } from './pages/OAuthCallback'
+import { ErrorBoundary } from './components/shared/ErrorBoundary'
+import { PageSpinner } from './components/shared/PageSpinner'
 import { useAuthStore } from './stores/authStore'
+
+// ─── Lazy-loaded pages (code-split per route) ───
+const ChatPage = lazy(() => import('./pages/Chat').then(m => ({ default: m.ChatPage })))
+const AgentsPage = lazy(() => import('./pages/Agents').then(m => ({ default: m.AgentsPage })))
+const IntegrationsPage = lazy(() => import('./pages/Integrations').then(m => ({ default: m.IntegrationsPage })))
+const BillingPage = lazy(() => import('./pages/Billing').then(m => ({ default: m.BillingPage })))
+const SettingsPage = lazy(() => import('./pages/Settings').then(m => ({ default: m.SettingsPage })))
+const AdminPage = lazy(() => import('./pages/Admin').then(m => ({ default: m.AdminPage })))
+const LoginPage = lazy(() => import('./pages/Login').then(m => ({ default: m.LoginPage })))
+const RegisterPage = lazy(() => import('./pages/Register').then(m => ({ default: m.RegisterPage })))
+const VerifyPage = lazy(() => import('./pages/Verify').then(m => ({ default: m.VerifyPage })))
+const OAuthCallbackPage = lazy(() => import('./pages/OAuthCallback').then(m => ({ default: m.OAuthCallbackPage })))
 
 export default function App() {
   const initialize = useAuthStore((s) => s.initialize)
@@ -25,9 +29,10 @@ export default function App() {
   }, [initialize])
 
   return (
-    <>
+    <ErrorBoundary>
     <SkipToContent />
     <RouteAnnouncer />
+    <Suspense fallback={<PageSpinner />}>
     <Routes>
       {/* ─── Public routes ─── */}
       <Route path="/login" element={<LoginPage />} />
@@ -54,6 +59,7 @@ export default function App() {
       {/* ─── Fallback ─── */}
       <Route path="*" element={<Navigate to="/chat" replace />} />
     </Routes>
-    </>
+    </Suspense>
+    </ErrorBoundary>
   )
 }

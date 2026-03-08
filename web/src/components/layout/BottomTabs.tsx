@@ -12,6 +12,7 @@ import {
   CreditCard,
   Gear,
 } from '@phosphor-icons/react'
+import { usePrefetch } from '../../hooks/usePrefetch'
 
 const tabs = [
   { to: '/chat', label: 'Chat', icon: ChatCircle },
@@ -20,6 +21,35 @@ const tabs = [
   { to: '/billing', label: 'Billing', icon: CreditCard },
   { to: '/settings', label: 'Settings', icon: Gear },
 ]
+
+function BottomTabItem({ item }: { item: typeof tabs[number] }) {
+  const prefetchProps = usePrefetch(item.to)
+  const Icon = item.icon
+
+  return (
+    <NavLink
+      to={item.to}
+      aria-label={item.label}
+      {...prefetchProps}
+      className={({ isActive }) =>
+        `flex flex-col items-center justify-center gap-0.5
+         min-w-[44px] min-h-[44px] px-2 py-1
+         rounded-lg text-[10px] font-medium
+         transition-colors duration-200 select-none
+         active:scale-95 active:opacity-80
+         focus-ring
+         ${isActive ? 'text-accent-text' : 'text-text-dim'}`
+      }
+    >
+      {({ isActive }) => (
+        <>
+          <Icon size={22} weight={isActive ? 'fill' : 'regular'} aria-hidden="true" />
+          <span className="leading-none" aria-hidden="true">{item.label}</span>
+        </>
+      )}
+    </NavLink>
+  )
+}
 
 export function BottomTabs() {
   return (
@@ -31,32 +61,9 @@ export function BottomTabs() {
       style={{ paddingBottom: 'var(--safe-b)' }}
     >
       <div className="flex items-center justify-around px-1">
-        {tabs.map((item) => {
-          const Icon = item.icon
-          return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              aria-label={item.label}
-              className={({ isActive }) =>
-                `flex flex-col items-center justify-center gap-0.5
-                 min-w-[44px] min-h-[44px] px-2 py-1
-                 rounded-lg text-[10px] font-medium
-                 transition-colors duration-200 select-none
-                 active:scale-95 active:opacity-80
-                 focus-ring
-                 ${isActive ? 'text-accent-text' : 'text-text-dim'}`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <Icon size={22} weight={isActive ? 'fill' : 'regular'} aria-hidden="true" />
-                  <span className="leading-none" aria-hidden="true">{item.label}</span>
-                </>
-              )}
-            </NavLink>
-          )
-        })}
+        {tabs.map((item) => (
+          <BottomTabItem key={item.to} item={item} />
+        ))}
       </div>
     </nav>
   )
