@@ -160,7 +160,12 @@ export const AgentCard = memo(function AgentCard({
             <span>{agent.skills.length} skill{agent.skills.length !== 1 ? 's' : ''}</span>
           )}
           {agent.allowed_integrations.length > 0 && (
-            <span>{agent.allowed_integrations.length} integration{agent.allowed_integrations.length !== 1 ? 's' : ''}</span>
+            <span title={agent.allowed_integrations.map(s => s.integration_id).join(', ')}>
+              {agent.allowed_integrations.length} integration{agent.allowed_integrations.length !== 1 ? 's' : ''}
+              {' · '}
+              {agent.allowed_integrations.reduce((n, s) => n + (s.allowed_tools?.length ?? 0), 0)} tool
+              {agent.allowed_integrations.reduce((n, s) => n + (s.allowed_tools?.length ?? 0), 0) !== 1 ? 's' : ''}
+            </span>
           )}
         </div>
         {agent.temperature !== undefined && (

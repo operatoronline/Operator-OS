@@ -1,13 +1,22 @@
 // ============================================================================
 // Operator OS — Agent Editor
 // Create/edit agent modal with form fields for all agent properties.
+// Includes per-agent integration scope editor (C14).
 // ============================================================================
 
 import { useState, useEffect, useCallback } from 'react'
 import { Modal } from '../shared/Modal'
 import { Button } from '../shared/Button'
 import { Input } from '../shared/Input'
-import type { Agent, CreateAgentRequest, UpdateAgentRequest } from '../../types/api'
+import { ScopeSelector } from './ScopeSelector'
+import { api, ApiRequestError } from '../../services/api'
+import type {
+  Agent,
+  AgentIntegrationScope,
+  CreateAgentRequest,
+  UpdateAgentRequest,
+  IntegrationSummary,
+} from '../../types/api'
 
 // ---------------------------------------------------------------------------
 // Available models (could later come from an API endpoint)
@@ -46,6 +55,7 @@ interface FormState {
   max_iterations: string
   tools: string
   skills: string
+  allowed_integrations: AgentIntegrationScope[]
 }
 
 const defaultForm: FormState = {
@@ -58,6 +68,7 @@ const defaultForm: FormState = {
   max_iterations: '10',
   tools: '',
   skills: '',
+  allowed_integrations: [],
 }
 
 function agentToForm(agent: Agent): FormState {
@@ -71,6 +82,7 @@ function agentToForm(agent: Agent): FormState {
     max_iterations: String(agent.max_iterations),
     tools: agent.tools.join(', '),
     skills: agent.skills.join(', '),
+    allowed_integrations: agent.allowed_integrations ?? [],
   }
 }
 
@@ -91,6 +103,9 @@ function formToPayload(form: FormState): CreateAgentRequest {
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean),
+    allowed_integrations: form.allowed_integrations.length > 0
+      ? form.allowed_integrations
+      : undefined,
   }
 }
 
@@ -103,6 +118,11 @@ export function AgentEditor({ open, onClose, onSave, agent, loading }: AgentEdit
   const [form, setForm] = useState<FormState>(defaultForm)
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({})
 
+  // Integration data for ScopeSelector
+  const [integrations, setIntegrations] = useState<IntegrationSummary[]>([])
+  const [integrationsLoading, setIntegrationsLoading] = useState(false)
+  const [integrationsError, setIntegrationsError] = useState<string | null>(null)
+
   // Reset form when modal opens / agent changes
   useEffect(() => {
     if (open) {
@@ -110,6 +130,36 @@ export function AgentEditor({ open, onClose, onSave, agent, loading }: AgentEdit
       setErrors({})
     }
   }, [open, agent])
+
+  // Fetch available integrations when modal opens
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    setIntegrationsLoading(true)
+    setIntegrationsError(null)
+
+    api.integrations
+      .list()
+      .then((data) => {
+        if (!cancelled) setIntegrations(data)
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setIntegrationsError(
+            err instanceof ApiRequestError
+              ? err.message
+              : 'Failed to load integrations',
+          )
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIntegrationsLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [open])
 
   const update = useCallback(
     (field: keyof FormState, value: string) => {
@@ -248,6 +298,17 @@ export function AgentEditor({ open, onClose, onSave, agent, loading }: AgentEdit
           placeholder="summarizer, coder"
           value={form.skills}
           onChange={(e) => update('skills', e.target.value)}
+        />
+
+        {/* ─── Integration Scopes (C14) ─── */}
+        <ScopeSelector
+          value={form.allowed_integrations}
+          onChange={(scopes) =>
+            setForm((prev) => ({ ...prev, allowed_integrations: scopes }))
+          }
+          integrations={integrations}
+          loading={integrationsLoading}
+          error={integrationsError}
         />
 
         {/* ─── Actions ─── */}
