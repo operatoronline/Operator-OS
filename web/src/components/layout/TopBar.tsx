@@ -27,7 +27,7 @@ const pageTitles: Record<string, string> = {
 }
 
 export function TopBar() {
-  const { theme, isDark, toggleTheme } = useTheme()
+  const { isDark, toggleTheme } = useTheme()
   const { user, logout } = useAuthStore()
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
