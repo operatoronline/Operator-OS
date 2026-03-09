@@ -355,14 +355,14 @@ export const api = {
     delete: (id: string) => del<void>(`/sessions/${id}`),
 
     messages: (id: string, params?: { page?: number; per_page?: number; before?: string }) =>
-      get<SessionMessage[]>(`/sessions/${id}/messages`, { params }),
+      get<{ messages: SessionMessage[] }>(`/sessions/${id}/messages`, { params }).then(r => r.messages ?? []),
   },
 
   // -------------------------------------------------------------------------
   // Billing
   // -------------------------------------------------------------------------
   billing: {
-    plans: () => get<Plan[]>('/billing/plans'),
+    plans: () => get<{ plans: Plan[]; count: number }>('/billing/plans').then(r => r.plans ?? []),
 
     plan: (id: string) => get<Plan>(`/billing/plans/${id}`),
 
@@ -384,17 +384,17 @@ export const api = {
   // Usage
   // -------------------------------------------------------------------------
   usage: {
-    summary: () => get<UsageSummary>('/billing/usage'),
+    summary: () => get<{ summary: UsageSummary; period_start: string; period_end: string }>('/billing/usage').then(r => r.summary),
 
     daily: (params?: { start?: string; end?: string }) =>
-      get<DailyUsage[]>('/billing/usage/daily', { params }),
+      get<{ daily: DailyUsage[]; count: number }>('/billing/usage/daily', { params }).then(r => r.daily ?? []),
 
-    byModel: () => get<ModelUsage[]>('/billing/usage/models'),
+    byModel: () => get<{ models: ModelUsage[]; count: number }>('/billing/usage/models').then(r => r.models ?? []),
 
     limits: () => get<UsageLimits>('/billing/usage/limits'),
 
     events: (params?: { page?: number; per_page?: number; model?: string }) =>
-      get<UsageEvent[]>('/billing/usage/events', { params }),
+      get<{ events: UsageEvent[]; count: number }>('/billing/usage/events', { params }).then(r => r.events ?? []),
 
     overage: () => get<OverageStatus>('/billing/overage'),
   },
@@ -403,11 +403,11 @@ export const api = {
   // Integrations
   // -------------------------------------------------------------------------
   integrations: {
-    list: () => get<IntegrationSummary[]>('/integrations'),
+    list: () => get<{ integrations: IntegrationSummary[]; count: number }>('/integrations').then(r => r.integrations ?? []),
 
     get: (id: string) => get<IntegrationSummary>(`/integrations/${id}`),
 
-    categories: () => get<string[]>('/integrations/categories'),
+    categories: () => get<{ categories: string[] }>('/integrations/categories').then(r => r.categories ?? []),
 
     connect: (data: ConnectRequest) =>
       post<ConnectResponse>('/manage/integrations/connect', data),
@@ -415,7 +415,7 @@ export const api = {
     disconnect: (data: { integration_id: string }) =>
       post<void>('/manage/integrations/disconnect', data),
 
-    status: () => get<IntegrationStatus[]>('/manage/integrations/status'),
+    status: () => get<{ integrations: IntegrationStatus[]; count: number }>('/manage/integrations/status').then(r => r.integrations ?? []),
 
     integrationStatus: (id: string) =>
       get<IntegrationStatus>(`/manage/integrations/${id}/status`),
@@ -437,7 +437,7 @@ export const api = {
   // User Integrations
   // -------------------------------------------------------------------------
   userIntegrations: {
-    list: () => get<UserIntegration[]>('/user/integrations'),
+    list: () => get<{ integrations: UserIntegration[]; count: number }>('/user/integrations').then(r => r.integrations ?? []),
 
     get: (id: string) => get<UserIntegration>(`/user/integrations/${id}`),
 
@@ -451,7 +451,7 @@ export const api = {
   // OAuth
   // -------------------------------------------------------------------------
   oauth: {
-    providers: () => get<OAuthProvider[]>('/oauth/providers'),
+    providers: () => get<{ providers: OAuthProvider[] }>('/oauth/providers').then(r => r.providers ?? []),
 
     authorize: (data: { provider: string; scopes?: string[]; redirect_uri?: string }) =>
       post<{ auth_url: string }>('/oauth/authorize', data),
@@ -490,7 +490,7 @@ export const api = {
   // -------------------------------------------------------------------------
   admin: {
     users: (params?: { page?: number; per_page?: number; search?: string; status?: string }) =>
-      get<AdminUser[]>('/admin/users', { params }),
+      get<{ users: AdminUser[]; total: number; limit: number; offset: number }>('/admin/users', { params }).then(r => r.users ?? []),
 
     user: (id: string) => get<AdminUser>(`/admin/users/${id}`),
 
@@ -526,7 +526,7 @@ export const api = {
       resource?: string
       start?: string
       end?: string
-    }) => get<AuditEvent[]>('/audit/events', { params }),
+    }) => get<{ events: AuditEvent[]; count: number }>('/audit/events', { params }).then(r => r.events ?? []),
 
     count: (params?: {
       action?: string
@@ -545,7 +545,7 @@ export const api = {
 
     erase: () => post<DataSubjectRequest>('/gdpr/erase'),
 
-    requests: () => get<DataSubjectRequest[]>('/gdpr/requests'),
+    requests: () => get<{ requests: DataSubjectRequest[] }>('/gdpr/requests').then(r => r.requests ?? []),
 
     request: (id: string) => get<DataSubjectRequest>(`/gdpr/requests/${id}`),
 
