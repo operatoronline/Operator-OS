@@ -21,6 +21,7 @@ import (
 	"github.com/operatoronline/Operator-OS/cmd/operator/internal/onboard"
 	"github.com/operatoronline/Operator-OS/cmd/operator/internal/skills"
 	"github.com/operatoronline/Operator-OS/cmd/operator/internal/status"
+	"github.com/operatoronline/Operator-OS/cmd/operator/internal/svcctl"
 	"github.com/operatoronline/Operator-OS/cmd/operator/internal/version"
 )
 
@@ -42,6 +43,7 @@ func NewOperatorCommand() *cobra.Command {
 		cron.NewCronCommand(),
 		migrate.NewMigrateCommand(),
 		skills.NewSkillsCommand(),
+		svcctl.NewServicesCommand(),
 		version.NewVersionCommand(),
 	)
 

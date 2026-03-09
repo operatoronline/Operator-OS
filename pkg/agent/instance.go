@@ -11,6 +11,7 @@ import (
 	"github.com/operatoronline/Operator-OS/pkg/config"
 	"github.com/operatoronline/Operator-OS/pkg/providers"
 	"github.com/operatoronline/Operator-OS/pkg/routing"
+	"github.com/operatoronline/Operator-OS/pkg/services"
 	"github.com/operatoronline/Operator-OS/pkg/session"
 	"github.com/operatoronline/Operator-OS/pkg/tools"
 )
@@ -68,6 +69,20 @@ func NewAgentInstance(
 
 	toolsRegistry.Register(tools.NewEditFileTool(workspace, restrict, allowWritePaths))
 	toolsRegistry.Register(tools.NewAppendFileTool(workspace, restrict, allowWritePaths))
+
+	// Register managed service tools (lazy — services start on first use)
+	svcManager := services.NewManager(services.DefaultConfig())
+	if svcManager.IsAvailable(services.ServiceBrowser) {
+		toolsRegistry.Register(tools.NewBrowserTool(svcManager))
+	}
+	if svcManager.IsAvailable(services.ServiceSandbox) {
+		toolsRegistry.Register(tools.NewSandboxTool(svcManager))
+	}
+	if svcManager.IsAvailable(services.ServiceRepo) {
+		toolsRegistry.Register(tools.NewRepoTool(svcManager))
+	}
+	toolsRegistry.Register(tools.NewServicesTool(svcManager))
+	svcManager.StartHealthMonitor()
 
 	sessionsDir := filepath.Join(workspace, "sessions")
 	sessionsManager := session.NewSessionManager(sessionsDir)

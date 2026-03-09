@@ -1,0 +1,143 @@
+##
+## Operator-OS Managed Services
+##
+## Usage:
+##   docker compose -f docker-compose.services.yml up -d
+##   docker compose -f docker-compose.services.yml --profile full up -d    # All services
+##   docker compose -f docker-compose.services.yml --profile standard up -d # Browser + Sandbox
+##
+## Hardware Profiles:
+##   nano:     Agent only (no services needed)
+##   standard: browser + sandbox (2-4GB RAM)
+##   pro/full: browser + sandbox + repo (8GB+ RAM)
+##
+
+services:
+
+  # ──────────────────────────────────────────────
+  # Operator Browser (go-browser)
+  # Real Firefox browser, undetectable by anti-bot
+  # Based on neko, optimized for agent control
+  # ──────────────────────────────────────────────
+  browser:
+    image: ghcr.io/operatoronline/go-browser:latest
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.browser
+    container_name: operator-browser
+    restart: unless-stopped
+    profiles: ["standard", "pro", "full"]
+    ports:
+      - "127.0.0.1:18800:8080"   # Agent API
+      - "127.0.0.1:18810:5900"   # VNC (debug only)
+    environment:
+      - OPERATOR_POOL_SIZE=${BROWSER_POOL_SIZE:-1}
+      - OPERATOR_IDLE_TIMEOUT=${BROWSER_IDLE_TIMEOUT:-300}
+      - OPERATOR_RESOLUTION=${BROWSER_RESOLUTION:-1920x1080}
+      - NEKO_BIND=:8080
+      - NEKO_EPR=52000-52100
+    volumes:
+      - browser-data:/home/operator
+    shm_size: "2gb"
+    deploy:
+      resources:
+        limits:
+          memory: ${BROWSER_MEM_LIMIT:-1g}
+          cpus: "${BROWSER_CPU_LIMIT:-1.0}"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    labels:
+      - "operator.managed=true"
+      - "operator.service=browser"
+
+  # ──────────────────────────────────────────────
+  # Operator Sandbox (go-sandbox)
+  # Secure code execution: Python, Node, Go, Rust
+  # Based on OpenSandbox, agent-optimized
+  # ──────────────────────────────────────────────
+  sandbox:
+    image: ghcr.io/operatoronline/go-sandbox:latest
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.sandbox
+    container_name: operator-sandbox
+    restart: unless-stopped
+    profiles: ["standard", "pro", "full"]
+    ports:
+      - "127.0.0.1:18801:8080"   # Sandbox API
+    environment:
+      - OPERATOR_MAX_SANDBOXES=${SANDBOX_MAX:-5}
+      - OPERATOR_EXEC_TIMEOUT=${SANDBOX_TIMEOUT:-300}
+      - OPERATOR_DEFAULT_LANGUAGE=python
+    volumes:
+      - sandbox-data:/var/lib/sandbox
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    deploy:
+      resources:
+        limits:
+          memory: ${SANDBOX_MEM_LIMIT:-512m}
+          cpus: "${SANDBOX_CPU_LIMIT:-1.0}"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    labels:
+      - "operator.managed=true"
+      - "operator.service=sandbox"
+
+  # ──────────────────────────────────────────────
+  # Operator Repo (go-repo)
+  # Lightweight Git service for agent version control
+  # Based on Gitea, stripped for agent use
+  # ──────────────────────────────────────────────
+  repo:
+    image: ghcr.io/operatoronline/go-repo:latest
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.repo
+    container_name: operator-repo
+    restart: unless-stopped
+    profiles: ["pro", "full"]
+    ports:
+      - "127.0.0.1:18802:3000"   # Git API
+      - "127.0.0.1:18803:22"     # Git SSH
+    environment:
+      - GITEA__database__DB_TYPE=sqlite3
+      - GITEA__database__PATH=/data/gitea/gitea.db
+      - GITEA__server__ROOT_URL=http://localhost:18802
+      - GITEA__server__DISABLE_SSH=false
+      - GITEA__server__START_SSH_SERVER=true
+      - GITEA__service__DISABLE_REGISTRATION=true
+      - GITEA__service__REQUIRE_SIGNIN_VIEW=false
+      - OPERATOR_MAX_REPOS=${REPO_MAX:-50}
+      - OPERATOR_STORAGE_QUOTA=${REPO_QUOTA:-5368709120}
+    volumes:
+      - repo-data:/data
+    deploy:
+      resources:
+        limits:
+          memory: ${REPO_MEM_LIMIT:-256m}
+          cpus: "${REPO_CPU_LIMIT:-0.5}"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/v1/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    labels:
+      - "operator.managed=true"
+      - "operator.service=repo"
+
+volumes:
+  browser-data:
+    name: operator-browser-data
+  sandbox-data:
+    name: operator-sandbox-data
+  repo-data:
+    name: operator-repo-data

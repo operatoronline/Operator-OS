@@ -1,0 +1,95 @@
+##
+## Operator-OS Full Stack (Agent + Managed Services)
+##
+## This is the all-in-one deployment for Operator-OS.
+## The agent boots instantly, services spin up on-demand.
+##
+## Quick start:
+##   cp .env.example .env       # Configure your API key and model
+##   docker compose -f docker-compose.managed.yml up -d
+##
+## Profiles (set OPERATOR_PROFILE in .env):
+##   standard: browser + sandbox       (needs 2-4GB RAM)
+##   pro:      browser + sandbox + repo (needs 8-16GB RAM)
+##   full:     all services             (needs 16GB+ RAM)
+##
+
+services:
+
+  # ──────────────────────────────────────────────
+  # Operator Agent (27MB Go binary)
+  # The kernel — boots in milliseconds
+  # ──────────────────────────────────────────────
+  agent:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: operator-agent
+    restart: unless-stopped
+    ports:
+      - "${AGENT_PORT:-18790}:18790"
+    environment:
+      - OPERATOR_PROFILE=${OPERATOR_PROFILE:-standard}
+      - OPERATOR_BROWSER_PORT=18800
+      - OPERATOR_SANDBOX_PORT=18801
+      - OPERATOR_REPO_PORT=18802
+    env_file:
+      - .env
+    volumes:
+      - agent-data:/app/workspace
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on: []
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:18790/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    labels:
+      - "operator.managed=true"
+      - "operator.service=agent"
+
+  # ──────────────────────────────────────────────
+  # Web UI (static, served by agent or standalone)
+  # ──────────────────────────────────────────────
+  web:
+    image: nginx:alpine
+    container_name: operator-web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-18795}:80"
+    volumes:
+      - ./web:/usr/share/nginx/html:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    labels:
+      - "operator.managed=true"
+      - "operator.service=web"
+
+  # Include managed services
+  browser:
+    extends:
+      file: docker/docker-compose.services.yml
+      service: browser
+
+  sandbox:
+    extends:
+      file: docker/docker-compose.services.yml
+      service: sandbox
+
+  repo:
+    extends:
+      file: docker/docker-compose.services.yml
+      service: repo
+
+volumes:
+  agent-data:
+    name: operator-agent-data
+  browser-data:
+    name: operator-browser-data
+  sandbox-data:
+    name: operator-sandbox-data
+  repo-data:
+    name: operator-repo-data

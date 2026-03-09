@@ -1,0 +1,30 @@
+{
+  "model_list": [
+    {
+      "model_name": "gemini-3-pro",
+      "model": "gemini/gemini-3-pro-preview",
+      "api_key": "AIzaSyDOMFhRCDtoB7aVGQ-PW1rUtszXKPoTdi0"
+    }
+  ],
+  "agents": {
+    "defaults": {
+      "model": "gemini-3-pro",
+      "restrict_to_workspace": false
+    }
+  },
+  "channels": {
+    "operator": {
+      "enabled": true,
+      "token": "Msqam_QEYPOKBkv54AJ560-jhmWFzlteMC02RCLCI6Y",
+      "allow_token_query": true,
+      "allow_origins": [
+        "*"
+      ],
+      "max_connections": 50
+    }
+  },
+  "gateway": {
+    "host": "0.0.0.0",
+    "port": 18796
+  }
+}
