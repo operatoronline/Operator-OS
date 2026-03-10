@@ -1,0 +1,92 @@
+##
+## Operator OS — Development Stack
+##
+## Usage:
+##   docker compose up                          # Start web + gateway (SQLite mode)
+##   docker compose --profile postgres up       # Start with PostgreSQL
+##   docker compose --profile redis up          # Start with Redis cache
+##   docker compose logs -f web                 # Tail frontend logs
+##   docker compose down                        # Stop everything
+##
+
+services:
+  # ===================
+  # Frontend (React + Vite)
+  # ===================
+  web:
+    build:
+      context: ./web
+      target: development
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:18790
+    depends_on:
+      - gateway
+    restart: unless-stopped
+
+  # ===================
+  # Backend Gateway (Go)
+  # ===================
+  gateway:
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
+      target: development
+    ports:
+      - "18790:18790"
+    volumes:
+      - .:/app
+      - ./config/config.example.json:/root/.operator/config.json:ro
+    environment:
+      - ENV=development
+      - PORT=18790
+    restart: unless-stopped
+
+  # ===================
+  # Database (optional — enable with --profile postgres)
+  # ===================
+  db:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=operator
+      - POSTGRES_PASSWORD=operator
+      - POSTGRES_DB=operator
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U operator"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    profiles:
+      - postgres
+    restart: unless-stopped
+
+  # ===================
+  # Cache (optional — enable with --profile redis)
+  # ===================
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    profiles:
+      - redis
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  default:
+    name: operator-network
