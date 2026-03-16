@@ -4,7 +4,7 @@
 **Phase 1: Foundation & Public Release Readiness**
 
 ## Last Updated
-2026-03-10 by claude/setup-starter-kit-rNWYL
+2026-03-16 by claude/review-status-continue-uDFFx
 
 ---
 
@@ -86,13 +86,13 @@
 - [ ] Polish `TopBar` — cleaner spacing, refined user dropdown
 - [ ] Polish `BottomTabs` — glass morphism refinement, active indicator
 - [ ] Polish `MobileSidebar` — slide animation polish, backdrop blur tuning
-- [ ] Add FAB (Floating Action Button) for quick chat/new-agent actions
+- [x] Add FAB (Floating Action Button) for quick chat/new-agent actions
 - [ ] Verify responsive breakpoints: 320px, 375px, 428px, 768px, 1024px, 1440px
 
 ### Chat Experience
 - [ ] Redesign `MessageBubble` — refined typography, spacing, user/agent distinction
 - [ ] Redesign `Composer` — premium input feel, attachment support placeholder
-- [ ] Polish `MessageList` — scroll behavior, date separators, empty states
+- [x] Polish `MessageList` — scroll behavior, date separators, empty states
 - [ ] Polish `CodeBlock` — syntax highlighting theme aligned with OKLCH tokens
 - [ ] Polish `MarkdownRenderer` — table, list, link styling consistency
 - [ ] Add `ConnectionStatus` visual indicator (subtle, non-intrusive)
@@ -133,8 +133,8 @@
 - [ ] Polish `ApiKeyDialog` — masked input, copy, regenerate
 
 ### Auth Pages
-- [ ] Redesign `Login` — premium centered card, branding, social login buttons
-- [ ] Redesign `Register` — step indicator, password strength meter
+- [x] Redesign `Login` — premium centered card, branding, social login buttons
+- [x] Redesign `Register` — step indicator, password strength meter
 - [ ] Redesign `Verify` — clear success/pending/error states
 
 ### Shared Components
@@ -145,9 +145,9 @@
 - [ ] Polish `ConfirmDialog` — destructive vs. safe action styling
 - [ ] Polish `EmptyState` — illustration + CTA
 - [ ] Polish `ToastContainer` — slide-in animation, auto-dismiss, action button
-- [ ] Add `Skeleton` loader component (reusable)
-- [ ] Add `Tooltip` component (hover/focus triggered)
-- [ ] Add `Dropdown` menu component (reusable, accessible)
+- [x] Add `Skeleton` loader component (reusable)
+- [x] Add `Tooltip` component (hover/focus triggered)
+- [x] Add `Dropdown` menu component (reusable, accessible)
 
 ### Accessibility (WCAG 2.1 AA)
 - [ ] Keyboard navigation audit — all interactive elements reachable via Tab
@@ -246,3 +246,19 @@ _None currently_
 - Aligned services/api/ and docker-compose.yml for project stack
 **Notes**: Ready for Phase 1 backend hardening and Phase 2 UI redesign
 **Branch**: `claude/setup-starter-kit-rNWYL`
+
+### Session: 2026-03-16
+**Focus**: Phase 2 frontend — shared components, auth pages, chat polish
+**Completed**:
+- Created `Skeleton` loader component with shimmer animation
+- Created `Tooltip` component (hover/focus triggered, accessible)
+- Created `Dropdown` menu component (keyboard navigable, accessible)
+- Created `FAB` (Floating Action Button) for quick new chat/agent actions
+- Redesigned `Login` page — branded card, logo, social login placeholders, password visibility toggle
+- Redesigned `Register` page — password strength meter, step indicator, branded card
+- Added date separators to `MessageList` (Today, Yesterday, formatted dates)
+- Fixed ESLint flat config compatibility (react-hooks plugin)
+- Added shimmer keyframe animation to design system
+- Updated shared component barrel exports
+**Notes**: Typecheck, lint (on new files), and production build all pass. Pre-existing lint errors in other files remain unchanged.
+**Branch**: `claude/review-status-continue-uDFFx`

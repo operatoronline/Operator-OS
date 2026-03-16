@@ -32,6 +32,29 @@ function shouldShowTimestamp(
   return gap > 2 * 60 * 1000 // 2 minutes
 }
 
+// Check if a date separator should be shown between messages
+function shouldShowDateSeparator(
+  current: ChatMessage,
+  previous: ChatMessage | undefined,
+): boolean {
+  if (!previous) return true
+  const currDate = new Date(current.createdAt).toDateString()
+  const prevDate = new Date(previous.createdAt).toDateString()
+  return currDate !== prevDate
+}
+
+function formatDateSeparator(iso: string): string {
+  const date = new Date(iso)
+  const now = new Date()
+  const today = now.toDateString()
+  const yesterday = new Date(now.getTime() - 86400000).toDateString()
+  const msgDate = date.toDateString()
+
+  if (msgDate === today) return 'Today'
+  if (msgDate === yesterday) return 'Yesterday'
+  return date.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })
+}
+
 export function MessageList({ messages, isTyping, loading = false, streamingMessageId }: MessageListProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -141,11 +164,22 @@ export function MessageList({ messages, isTyping, loading = false, streamingMess
           {/* Messages */}
           <div role="list" aria-label="Chat messages">
             {messages.map((msg, i) => (
-              <MessageBubble
-                key={msg.id}
-                message={msg}
-                showTimestamp={shouldShowTimestamp(msg, messages[i - 1])}
-              />
+              <div key={msg.id}>
+                {/* Date separator */}
+                {shouldShowDateSeparator(msg, messages[i - 1]) && (
+                  <div className="flex items-center gap-3 py-4" role="separator" aria-label={formatDateSeparator(msg.createdAt)}>
+                    <div className="flex-1 h-px bg-border-subtle" />
+                    <span className="text-[11px] font-medium text-text-dim px-2 select-none">
+                      {formatDateSeparator(msg.createdAt)}
+                    </span>
+                    <div className="flex-1 h-px bg-border-subtle" />
+                  </div>
+                )}
+                <MessageBubble
+                  message={msg}
+                  showTimestamp={shouldShowTimestamp(msg, messages[i - 1])}
+                />
+              </div>
             ))}
           </div>
 

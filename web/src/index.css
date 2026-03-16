@@ -367,6 +367,12 @@ button:focus-visible,
   50% { opacity: 0; }
 }
 
+@keyframes shimmer {
+  0% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.5; }
+}
+
 .animate-blink { animation: blink 0.8s ease-in-out infinite; }
 
 .animate-fade-slide { animation: fadeSlide 0.25s ease; }

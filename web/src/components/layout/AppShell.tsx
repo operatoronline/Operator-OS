@@ -10,6 +10,7 @@ import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
 import { BottomTabs } from './BottomTabs'
 import { MobileSidebar } from './MobileSidebar'
+import { FAB } from './FAB'
 import { OfflineBanner } from '../shared/OfflineBanner'
 import { ToastContainer } from '../shared/ToastContainer'
 import { useUIStore } from '../../stores/uiStore'
@@ -57,6 +58,9 @@ export function AppShell() {
 
       {/* ─── Bottom tabs (mobile) ─── */}
       <BottomTabs />
+
+      {/* ─── FAB for quick actions ─── */}
+      <FAB />
 
       {/* ─── Toast notifications ─── */}
       <ToastContainer />
