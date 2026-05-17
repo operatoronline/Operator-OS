@@ -28,11 +28,14 @@ type (
 	ReasoningDetail        = protocoltypes.ReasoningDetail
 )
 
+type AccessTokenProvider func(context.Context) (string, error)
+
 type Provider struct {
-	apiKey         string
-	apiBase        string
-	maxTokensField string // Field name for max tokens (e.g., "max_completion_tokens" for o1/glm models)
-	httpClient     *http.Client
+	apiKey              string
+	apiBase             string
+	maxTokensField      string // Field name for max tokens (e.g., "max_completion_tokens" for o1/glm models)
+	accessTokenProvider AccessTokenProvider
+	httpClient          *http.Client
 }
 
 type Option func(*Provider)
@@ -50,6 +53,12 @@ func WithRequestTimeout(timeout time.Duration) Option {
 		if timeout > 0 {
 			p.httpClient.Timeout = timeout
 		}
+	}
+}
+
+func WithAccessTokenProvider(provider AccessTokenProvider) Option {
+	return func(p *Provider) {
+		p.accessTokenProvider = provider
 	}
 }
 
@@ -173,7 +182,15 @@ func (p *Provider) Chat(
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	if p.apiKey != "" {
+	if p.accessTokenProvider != nil {
+		token, err := p.accessTokenProvider(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get access token: %w", err)
+		}
+		if token != "" {
+			req.Header.Set("Authorization", "Bearer "+token)
+		}
+	} else if p.apiKey != "" {
 		req.Header.Set("Authorization", "Bearer "+p.apiKey)
 	}
 
@@ -355,7 +372,8 @@ func normalizeModel(model, apiBase string) string {
 		return model
 	}
 
-	if strings.Contains(strings.ToLower(apiBase), "openrouter.ai") {
+	apiBaseLower := strings.ToLower(apiBase)
+	if strings.Contains(apiBaseLower, "openrouter.ai") || strings.Contains(apiBaseLower, "aiplatform.googleapis.com") {
 		return model
 	}
 
