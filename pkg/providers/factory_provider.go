@@ -6,10 +6,14 @@
 package providers
 
 import (
+	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/operatoronline/Operator-OS/pkg/config"
+	"github.com/operatoronline/Operator-OS/pkg/providers/openai_compat"
+	"golang.org/x/oauth2/google"
 )
 
 // createClaudeAuthProvider creates a Claude provider using OAuth credentials from auth store.
@@ -34,6 +38,23 @@ func createCodexAuthProvider() (LLMProvider, error) {
 		return nil, fmt.Errorf("no credentials for openai. Run: operator auth login --provider openai")
 	}
 	return NewCodexProviderWithTokenSource(cred.AccessToken, cred.AccountID, createCodexTokenSource()), nil
+}
+
+func createGoogleADCAccessTokenProvider() (func(context.Context) (string, error), error) {
+	tokenSource, err := google.DefaultTokenSource(context.Background(), "https://www.googleapis.com/auth/cloud-platform")
+	if err != nil {
+		return nil, fmt.Errorf("google ADC unavailable: %w", err)
+	}
+	return func(ctx context.Context) (string, error) {
+		token, err := tokenSource.Token()
+		if err != nil {
+			return "", err
+		}
+		if token == nil {
+			return "", fmt.Errorf("google ADC returned nil token")
+		}
+		return token.AccessToken, nil
+	}, nil
 }
 
 // ExtractProtocol extracts the protocol prefix and model identifier from a model string.
@@ -103,13 +124,18 @@ func CreateProviderFromConfig(cfg *config.ModelConfig) (LLMProvider, string, err
 		if apiBase == "" {
 			apiBase = getDefaultAPIBase(protocol)
 		}
-		return NewHTTPProviderWithMaxTokensFieldAndRequestTimeout(
-			cfg.APIKey,
-			apiBase,
-			cfg.Proxy,
-			cfg.MaxTokensField,
-			cfg.RequestTimeout,
-		), modelID, nil
+		opts := []openai_compat.Option{
+			openai_compat.WithMaxTokensField(cfg.MaxTokensField),
+			openai_compat.WithRequestTimeout(time.Duration(cfg.RequestTimeout) * time.Second),
+		}
+		if cfg.AuthMethod == "oauth" && strings.Contains(apiBase, "aiplatform.googleapis.com") {
+			tokenProvider, err := createGoogleADCAccessTokenProvider()
+			if err != nil {
+				return nil, "", fmt.Errorf("failed to initialize google oauth for %s: %w", modelID, err)
+			}
+			opts = append(opts, openai_compat.WithAccessTokenProvider(tokenProvider))
+		}
+		return NewHTTPProviderWithOptions(cfg.APIKey, apiBase, cfg.Proxy, opts...), modelID, nil
 
 	case "anthropic":
 		if cfg.AuthMethod == "oauth" || cfg.AuthMethod == "token" {

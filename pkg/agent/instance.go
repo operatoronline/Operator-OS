@@ -162,11 +162,15 @@ func NewAgentInstance(
 	}
 
 	candidates := providers.ResolveCandidatesWithLookup(modelCfg, defaults.Provider, resolveFromModelList)
+	effectiveModel := model
+	if len(candidates) > 0 && strings.TrimSpace(candidates[0].Model) != "" {
+		effectiveModel = candidates[0].Model
+	}
 
 	return &AgentInstance{
 		ID:             agentID,
 		Name:           agentName,
-		Model:          model,
+		Model:          effectiveModel,
 		Fallbacks:      fallbacks,
 		Workspace:      workspace,
 		MaxIterations:  maxIter,
